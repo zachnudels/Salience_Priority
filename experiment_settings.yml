@@ -1,0 +1,77 @@
+preferences:
+  general:
+    audioLib: sounddevice
+    units: deg
+
+study:
+  no_exps: 2
+  exp1:
+    SOAs: [-100, -30, 0, 30, 100]
+    num_reps: 65
+
+window: # refers to the parameters for the Psychopy Window class
+  units: pix
+  color: [0, 0, 0] # psychopy rgb
+  fullscr: True
+  screen: 0 #0 #1
+  winType: 'pyglet'
+  waitBlanking: True
+  colorSpace: 'rgb' #'hsv' #'rgb255'
+
+monitor:
+  name: default
+  width: 52.6 # width of monitor (in cm)
+  distance: 73 # distance of participant from monitor (in cm)
+  gamma: 1 # specific value for gamma correction
+
+monitor_extra:
+  height: 30 # height of monitor (in cm)
+
+mouse:
+  visible: False
+
+window_extra: # refers to the parameters for the OLD Psychopy Window class (new version breaks)
+  size: [1920, 1080] #[1680, 1050]
+  pos: [0, 0]
+  framerate: 60
+  mac_bool: False #True #False
+
+paths:
+  curr_dir: 'lab' # 'local'
+  data_pth: {'lab': 'C:\Users\crowding_search_2\Desktop\LocalPC-DATA\'} 
+
+eyetracker:
+  address: '100.1.1.1' #  Eyelink eyetracker IP
+  dot_size: 0.15  # in dva
+  options: # Eyelink specific settings
+    active_eye: left  # [right]
+    calibration_type: HV9  # [H3, HV3, HV5, HV9]
+    sample_rate: 1000
+    calibration_area_proportion: 0.7 0.7 #0.88 0.83
+    validation_area_proportion: 0.7 0.7 #0.88 0.83
+
+stimuli:
+  num_singletons: 2
+  bg_orientation: [-10, 10]
+  targe_orientation: [30, -30]
+  distractor_orientation: [30, -30]
+  x_count: 29
+  y_count: 17
+  spacing: 0.42
+  line_length: 0.4  # 19 * 2
+  line_width: 0.06  # 3 * 2
+  line_color: "#AAAAAA"
+  jitter: 0
+  fix_dot_size_deg: 0.05
+  fix_line_size_deg: 0.5
+  fix_line_width_deg: 0.1
+  fix_color: [ 1, 1, 1 ] # psychopy rgb white
+
+trial_info:
+  practice_trial_num: 50
+  break_trial_num: 50
+  initialization_time: 0.2
+  ITI: 0.5
+  max_response_time: 2
+
+
