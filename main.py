@@ -3,7 +3,6 @@ import sys
 import os
 import os.path as op
 # import appnope
-from session import VsearchSession, CrowdingSession, TrainCrowdingSession, TrainVsearchSession
 import yaml
 
 from singleton_session import SingletonSession

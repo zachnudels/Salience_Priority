@@ -5,7 +5,7 @@ from copy import deepcopy
 from psychopy import visual
 from psychopy.tools.monitorunittools import deg2pix
 
-from session import ExpSession
+from exptools2.core import ExpSession
 from singleton_trial import SingletonTrial, PracticeSingletonTrial
 from utils import grid_coordinates, dva_per_pix
 
@@ -17,35 +17,68 @@ class SingletonSession(ExpSession):
         super().__init__(output_str=output_str, output_dir=output_dir, settings_file=settings_file,
                          eyetracker_on=eyetracker_on)
 
-        trial_parameters = dict()
-        trial_parameters["subject_number"] = subject_number
+        self.trial_parameters = dict()
+        self.trial_parameters["subject_number"] = subject_number
         self.RTs = []
+        self.to_target_list = []
 
         if subject_number % 2 == 0:
-            trial_parameters["target_orientation"] = self.settings["stimuli"]["targetOrientation"][0]
-            trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractorOrientation"][0]
+            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["targetOrientation"][0]
+            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractorOrientation"][0]
 
         else:
-            trial_parameters["target_orientation"] = self.settings["stimuli"]["targetOrientation"][1]
-            trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractorOrientation"][1]
+            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["targetOrientation"][1]
+            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractorOrientation"][1]
 
         # target salient or  not
-        if abs(trial_parameters["target_orientation"] - trial_parameters["bg_orientation"]) > \
-                abs(trial_parameters["distractor_orientation"] - trial_parameters["bg_orientation"]):
-            trial_parameters["target_salience"] = "high"
+        if abs(self.trial_parameters["target_orientation"] - self.trial_parameters["bg_orientation"]) > \
+                abs(self.trial_parameters["distractor_orientation"] - self.trial_parameters["bg_orientation"]):
+            self.trial_parameters["target_salience"] = "high"
         else:
-            trial_parameters["target_salience"] = "low"
+            self.trial_parameters["target_salience"] = "low"
 
         # TODO: when making instruction screen, use sign of target to help with [target] and [target_symbol]
         # TODO: As with distractor
 
-        # TODO: Check this - I think Ines used vertical and psychopy uses horizontal to convert
+       
+       
+
+        self.trials = []
+
+
+    def run(Self):
+        self.create_trials()
+        self.create_experiment()
+
+        for trial in self.trials:
+            trial.run()
+        
+        self.close()
+
+       
+
+    # TODO
+    # TODO: Check with Mieke if we want to only have singletons on the diagonals (paper says 6 possible locations)
+    def construct_singleton_pairs(self) -> List[Tuple[Coordinate, Coordinate]]:
+        """
+        Should return every possible combination of target, distractor pairs
+        Returns
+        -------
+
+        """
+        return [((-1, 1), (1, -1)), ((-1, 1), (1, -1))]
+
+
+    def create_trials(self):
+
+         # TODO: Check this - I think Ines used vertical and psychopy uses horizontal to convert
         pixel_l = deg2pix(self.settings["stimuli"]["line_length"], self.win.monitor)
 
         pixel_w = deg2pix(self.settings["stimuli"]["line_width"], self.win.monitor)
         pixel_spacing = deg2pix(self.setting["stimuli"]["spacing"], self.win.monitor) + np.max([pixel_l, pixel_w])
 
-        # x_ and y_ spacing are spacing + line width and length, respectively
+
+         # x_ and y_ spacing are spacing + line width and length, respectively
         coordinates = grid_coordinates(self.settings["stimuli"]["x_count"],
                                        self.settings["stimuli"]["y_count"],
                                        pixel_spacing)
@@ -69,14 +102,13 @@ class SingletonSession(ExpSession):
                                          lineWidth=line_width_pix,
                                          closeShape=False,
                                          lineColor=self.settings['stimuli']['fix_color'])
-
-        ########################
+         ########################
         # # init variables for feedback
         #
         # check if they moved their eyes before targets are shown
         fixation_circle = visual.Circle(self.win, radius=50, pos=(0, 0))
 
-        self.trials = []
+        
 
         # Save memory - don't construct for each rep
         possible_grids = dict()
@@ -173,15 +205,4 @@ class SingletonSession(ExpSession):
 
         np.random.shuffle(self.trials)
         self.results = np.matrix(np.zeros([len(self.trials), 12]), dtype=object)
-        self.to_target_list = []
-
-    # TODO
-    # TODO: Check with Mieke if we want to only have singletons on the diagonals (paper says 6 possible locations)
-    def construct_singleton_pairs(self) -> List[Tuple[Coordinate, Coordinate]]:
-        """
-        Should return every possible combination of target, distractor pairs
-        Returns
-        -------
-
-        """
-        return [((-1, 1), (1, -1)), ((-1, 1), (1, -1))]
+        

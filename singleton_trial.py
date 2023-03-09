@@ -69,7 +69,6 @@ class SingletonTrial(Trial):
             avg_RT = np.round(np.nanmean(self.session.RTs) * 1000)
             self.give_feedback(block, avg_RT)
             self.session.RTs = []
-            to_target_list = []  # TODO
 
         # TODO: Break out practice into separate class
         if self.trial_nr == self.settings["practice_trial_nr"]:
@@ -123,12 +122,10 @@ class SingletonTrial(Trial):
             self.stimulus1.draw()
             self.session.eyetracker.log(self.parameters["stimulus1_log"])
             self.t0 = self.session.clock.getTime()  # TODO: Check if t0 needs to be accurate (target displayed rather than either)
-            # TODO Logging and timing for RT display to subj
 
         elif self.phase_names[int(self.phase)] == 'stimulus2':
             self.stimulus2.draw()
             self.session.eyetracker.log(self.parameters["stimulus2_log"])
-            # TODO Logging and timing for RT display to subj
             self.endtime, self.startpos, self.endpos = self.session.tracker.wait_for_saccade_end()
 
             self.response, self.RT = self.response_check(self.t0, self.parameters["practice"])  # TODO: Practice stuff
@@ -139,7 +136,6 @@ class SingletonTrial(Trial):
 
         elif self.phase_names[int(self.phase)] == 'ITI':
             # now check if the eye movement was made correctly
-            # TODO: Why check here if saccade made correctly?
             self.success = self.check_saccade(self.endpos)
             self.session.tracker.log('TRIAL_VAR end_position ' + str(self.endpos))
             self.session.tracker.log('TRIAL_VAR succes ' + str(self.success))

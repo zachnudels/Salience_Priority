@@ -1,0 +1,5 @@
+setup.py
+SaliencePriority.egg-info/PKG-INFO
+SaliencePriority.egg-info/SOURCES.txt
+SaliencePriority.egg-info/dependency_links.txt
+SaliencePriority.egg-info/top_level.txt
