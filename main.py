@@ -26,23 +26,17 @@ def main():
                         'as 2nd argument in the command line!')
 
     sj_num = str(sys.argv[1]).zfill(3)  # subject number
-    ses_type = str(sys.argv[2])  # run number
+    exp_num = str(sys.argv[2])  # run number
 
  # TODO: Check if practice always in same file?
-    if ses_type not in ['train', 'test']:
-        print('session type not accepted')
-        ses_type = ''
-        while ses_type not in ('train', 'test'):
-            ses_type = input('Which session type to run (train/test)?: ')
-
     # task name dictionary
     exps = params['study']['no_exps']
 
     exp_num = ''
-    while exp_num not in exps:
+    while exp_num not in range(exps):
         exp_num = input(f"Which experiment to run ({exps.join('/ ')})?: ")
 
-    print(f"Running experiment {exp_num} for subject {sj_num}, ses {ses_type}")
+    print(f"Running experiment {exp_num} for subject {sj_num}")
 
     # make output dir
     if params['paths']['curr_dir'] == 'lab':
