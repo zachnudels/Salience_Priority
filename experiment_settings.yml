@@ -55,7 +55,7 @@ eyetracker:
 stimuli:
   num_singletons: 2
   bg_orientation: [-10, 10]
-  targe_orientation: [30, -30]
+  target_orientation: [30, -30]
   distractor_orientation: [30, -30]
   x_count: 29
   y_count: 17
