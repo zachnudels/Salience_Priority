@@ -34,7 +34,7 @@ def main():
 
     exp_num = ''
     while exp_num not in range(exps):
-        exp_num = input(f"Which experiment to run ({exps.join('/ ')})?: ")
+        exp_num = input(f"Which experiment to run ({'/ '.join([str(e+1) for e in range(exps)])})?: ")
 
     print(f"Running experiment {exp_num} for subject {sj_num}")
 
