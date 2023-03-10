@@ -25,8 +25,8 @@ def main():
         raise NameError('Please add session number (ex:1) '
                         'as 2nd argument in the command line!')
 
-    sj_num = str(sys.argv[1]).zfill(3)  # subject number
-    exp_num = str(sys.argv[2])  # run number
+    sj_num = int(sys.argv[1])  # subject number
+    exp_num = int(sys.argv[2])  # run number
 
     # TODO: Check if practice always in same file?
     # task name dictionary
