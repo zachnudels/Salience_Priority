@@ -197,7 +197,7 @@ class SingletonSession(PylinkEyetrackerSession):
                             _trial_parameters["target_salience"] = "low"
 
                         _trial_parameters["target_pos"] = target_coord
-                        _trial_parameters["dist_pos"] = distractor_coord
+                        _trial_parameters["distractor_pos"] = distractor_coord
                         _trial_parameters["bg_orientation"] = bg_orientation
                         _trial_parameters["SOA"] = SOA * 1e-3
 
