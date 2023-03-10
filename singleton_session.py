@@ -27,12 +27,12 @@ class SingletonSession(PylinkEyetrackerSession):
         self.exp_num = exp_num
 
         if subject_number % 2 == 0:
-            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["targetOrientation"][0]
-            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractorOrientation"][0]
+            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["target_orientation"][0]
+            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractor_orientation"][0]
 
         else:
-            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["targetOrientation"][1]
-            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractorOrientation"][1]
+            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["target_orientation"][1]
+            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractor_orientation"][1]
 
         self.num_reps = self.settings["study"][f"exp{self.exp_num}"]["num_reps"]
         self.bg_orientations = self.settings["stimuli"]["bg_orientation"]
