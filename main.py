@@ -37,14 +37,14 @@ def main():
         base_dir = params['paths']['data_pth']['lab']
     else:
         base_dir = op.split(os.getcwd())[0]  # main path for all folders of project
-    output_dir = op.join(base_dir, 'output', 'sourcedata', f"behavioural_data_mieke{sj_num}")
+    output_dir = op.join(base_dir, 'output', 'sourcedata')
 
     # if output path doesn't exist, create it
     if not op.isdir(output_dir):
         os.makedirs(output_dir)
     print(f"Saving files in {output_dir}")
 
-    exp_sess = SingletonSession(output_str=output_str,
+    exp_sess = SingletonSession(output_str=f"behavioural_data_mieke{sj_num}",
                                 output_dir=output_dir,
                                 eyetracker_on=True,
                                 settings_file=params,
