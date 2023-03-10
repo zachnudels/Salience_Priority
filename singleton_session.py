@@ -174,7 +174,7 @@ class SingletonSession(PylinkEyetrackerSession):
                       len(possible_singleton_locations))
         trials_per_block = num_trials / self.num_blocks
         trial_indices = np.arange(num_trials)
-        np.shuffle(trial_indices)  # Randomise trials
+        np.random.shuffle(trial_indices)  # Randomise trials
         trial_i = 0
 
         for rep in range(self.num_reps):
