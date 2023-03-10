@@ -94,7 +94,7 @@ class SingletonSession(PylinkEyetrackerSession):
         pixel_l = deg2pix(self.settings["stimuli"]["line_length"], self.win.monitor)
 
         pixel_w = deg2pix(self.settings["stimuli"]["line_width"], self.win.monitor)
-        pixel_spacing = deg2pix(self.setting["stimuli"]["spacing"], self.win.monitor) + np.max([pixel_l, pixel_w])
+        pixel_spacing = deg2pix(self.settings["stimuli"]["spacing"], self.win.monitor) + np.max([pixel_l, pixel_w])
 
         coordinates = grid_coordinates(self.settings["stimuli"]["x_count"],
                                        self.settings["stimuli"]["y_count"],
