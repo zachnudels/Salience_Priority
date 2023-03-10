@@ -28,14 +28,8 @@ def main():
     sj_num = str(sys.argv[1]).zfill(3)  # subject number
     exp_num = str(sys.argv[2])  # run number
 
- # TODO: Check if practice always in same file?
+    # TODO: Check if practice always in same file?
     # task name dictionary
-    exps = params['study']['no_exps']
-
-    exp_num = ''
-    while exp_num not in range(exps):
-        exp_num = input(f"Which experiment to run ({'/ '.join([str(e+1) for e in range(exps)])})?: ")
-
     print(f"Running experiment {exp_num} for subject {sj_num}")
 
     # make output dir
@@ -43,29 +37,12 @@ def main():
         base_dir = params['paths']['data_pth']['lab']
     else:
         base_dir = op.split(os.getcwd())[0]  # main path for all folders of project
-    output_dir = op.join(base_dir, 'output', 'sourcedata', f"{sj_num}")
+    output_dir = op.join(base_dir, 'output', 'sourcedata', f"behavioural_data_mieke{sj_num}")
 
     # if output path doesn't exist, create it
     if not op.isdir(output_dir):
         os.makedirs(output_dir)
     print(f"Saving files in {output_dir}")
-
-    # TODO: string for output data
-    output_str = f"behavioural_data_mieke{sj_num}"
-
-    # if file already exists
-    # behav_file = op.join(output_dir, f"{output_str}_events.tsv")
-    # if op.exists(behav_file):
-    #     print('File already exists!')
-    #
-    #     overwrite = ''
-    #     while overwrite not in ('y', 'yes', 'n', 'no'):
-    #         overwrite = input(f"overwrite {behav_file} \n(y/yes/n/no)?:")
-    #
-    #     if overwrite in ['no', 'n']:
-    #         raise NameError(f"Run {behav_file} already in directory\nstopping experiment!")
-
-    # load appropriate class object to be run
 
     exp_sess = SingletonSession(output_str=output_str,
                                 output_dir=output_dir,
