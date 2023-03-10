@@ -34,10 +34,11 @@ class SingletonSession(PylinkEyetrackerSession):
             self.trial_parameters["target_orientation"] = self.settings["stimuli"]["target_orientation"][1]
             self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractor_orientation"][1]
 
-        self.num_reps = self.settings["study"][f"exp{self.exp_num}"]["num_reps"]
+        self.exp_str = f"exp{self.exp_num}"
+        self.num_reps = self.settings["study"][self.exp_str]["num_reps"]
         self.bg_orientations = self.settings["stimuli"]["bg_orientation"]
-        self.SOAs = self.settings["study"][f"exp{self.exp_num}"]["SOAs"]
-        self.num_blocks = self.settings["study"]["exp{self.exp_num}"]["num_blocks"]
+        self.SOAs = self.settings["study"][self.exp_str]["SOAs"]
+        self.num_blocks = self.settings["study"][self.exp_str]["num_blocks"]
 
 
         self.instructions = {
@@ -242,7 +243,7 @@ class SingletonSession(PylinkEyetrackerSession):
                                                           distractor_circle_big=dist_big_circles[key]))
 
         self.practice_trials = deepcopy(
-            np.random.choice(self.trials, self.settings["study"][f"exp{self.exp_num}"]["practice_trials"]))
+            np.random.choice(self.trials, self.settings["study"][self.exp_str]["practice_trials"]))
         for i in range(len(self.practice_trials)):
             self.practice_trials[i].trial_num = i
             self.practice_trials[i].parameters["practice"] = True
