@@ -3,6 +3,8 @@ from typing import List, Tuple
 import numpy as np
 from copy import deepcopy
 from psychopy import visual
+from psychopy import prefs
+prefs.hardware['audioLib'] = ['PTB']
 from psychopy.tools.monitorunittools import deg2pix
 
 from exptools2.core import PylinkEyetrackerSession
@@ -151,7 +153,7 @@ class SingletonSession(PylinkEyetrackerSession):
                                                               elementTex=None,
                                                               interpolate=False)
                 possible_singletons[key] = visual.ElementArrayStim(self.win,
-                                                                   nElements=1,
+                                                                   nElements=2,
                                                                    xys=[target_coord, distractor_coord],
                                                                    oris=[self.trial_parameters["target_orientation"],
                                                                          self.trial_parameters[
