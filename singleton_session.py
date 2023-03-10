@@ -201,6 +201,8 @@ class SingletonSession(PylinkEyetrackerSession):
                         _trial_parameters["bg_orientation"] = bg_orientation
                         _trial_parameters["SOA"] = SOA * 1e-3
 
+                        _trial_parameters["practice"] = False
+
                         grid = possible_grids[key]
                         singletons = possible_singletons[key]
 
