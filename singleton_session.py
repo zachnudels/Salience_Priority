@@ -6,7 +6,7 @@ from psychopy import visual
 from psychopy.tools.monitorunittools import deg2pix
 
 from exptools2.core import PylinkEyetrackerSession
-from singleton_trial import SingletonTrial, PracticeSingletonTrial
+from singleton_trial import SingletonTrial
 from utils import grid_coordinates, dva_per_pix, draw_instructions
 
 Coordinate = Tuple[int, int]
