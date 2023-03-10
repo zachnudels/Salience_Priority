@@ -47,7 +47,7 @@ def main():
     exp_sess = SingletonSession(output_str=f"behavioural_data_mieke{sj_num}",
                                 output_dir=output_dir,
                                 eyetracker_on=True,
-                                settings_file=params,
+                                settings_file='experiment_settings.yml',
                                 subject_number=sj_num,
                                 exp_num=exp_num)
 
