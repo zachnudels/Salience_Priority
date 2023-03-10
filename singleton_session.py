@@ -5,14 +5,14 @@ from copy import deepcopy
 from psychopy import visual
 from psychopy.tools.monitorunittools import deg2pix
 
-from exptools2.core import ExpSession
+from exptools2.core import PylinkEyetrackerSession
 from singleton_trial import SingletonTrial, PracticeSingletonTrial
 from utils import grid_coordinates, dva_per_pix, draw_instructions
 
 Coordinate = Tuple[int, int]
 
 
-class SingletonSession(ExpSession):
+class SingletonSession(PylinkEyetrackerSession):
     def __init__(self, output_str, output_dir, settings_file, eyetracker_on, subject_number, exp_num):
         super().__init__(output_str=output_str, output_dir=output_dir, settings_file=settings_file,
                          eyetracker_on=eyetracker_on)

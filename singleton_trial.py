@@ -4,14 +4,15 @@ from exptools2.core import Trial, Session
 from typing import Dict, Optional, Tuple
 
 import pickle
+import psychtoolbox as ptb
 from psychopy.visual.elementarray import ElementArrayStim
 from psychopy.visual.circle import Circle
 from psychopy import event, visual
-from openexp.synth import synth
+from psychopy import prefs
+prefs.hardware['audioLib'] = ['PTB']
+from psychopy import sound
 
 import utils
-
-my_synth = synth(self.experiment, osc="sine", freq=500, attack=0, length=100)
 
 
 # Opening edf files:
@@ -59,6 +60,8 @@ class SingletonTrial(Trial):
 
         self.parameters = parameters
         self.practice = self.parameters["practice"]
+
+        self.a_sound = sound.Sound('A')
 
         # self.singletons = singletons
         # self.target_stim = target_stim
@@ -209,7 +212,7 @@ class SingletonTrial(Trial):
         elif self.dist_circle.contains(curPos):
             response = 'distractor'
             self.to_target_list.append(0)
-            my_synth.play()
+            self.mySound.play(when=ptb.GetSecs())
             if practice:
                 warning_text.draw()
                 self.session.win.flip()
