@@ -28,6 +28,7 @@ class SingletonTrial(Trial):
                  parameters: Dict,
                  stimulus1: ElementArrayStim,
                  stimulus2: ElementArrayStim,
+                 a_sound: sound.Sound,
                  fixation_circle: Circle,
                  target_circle: Circle,
                  distractor_circle: Circle,
@@ -59,7 +60,7 @@ class SingletonTrial(Trial):
         self.parameters = parameters
         self.practice = self.parameters["practice"]
 
-        self.a_sound = sound.Sound('A')
+        self.a_sound = a_sound
 
         # self.singletons = singletons
         # self.target_stim = target_stim

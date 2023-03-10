@@ -4,6 +4,7 @@ import numpy as np
 from copy import deepcopy
 from psychopy import visual
 from psychopy import prefs
+from psychopy import sound
 prefs.hardware['audioLib'] = ['PTB']
 from psychopy.tools.monitorunittools import deg2pix
 
@@ -177,6 +178,8 @@ class SingletonSession(PylinkEyetrackerSession):
         np.random.shuffle(trial_indices)  # Randomise trials
         trial_i = 0
 
+        a_sound = sound.Sound('A')
+
         for rep in range(self.num_reps):
             for bg_orientation in self.bg_orientations:
                 for SOA in self.SOAs:
@@ -240,6 +243,7 @@ class SingletonSession(PylinkEyetrackerSession):
                                                           parameters=_trial_parameters,
                                                           stimulus1=stimulus1,
                                                           stimulus2=stimulus2,
+                                                          a_sound=a_sound,
                                                           fixation_circle=fixation_circle,
                                                           target_circle=target_circles[key],
                                                           distractor_circle=dist_circles[key],
