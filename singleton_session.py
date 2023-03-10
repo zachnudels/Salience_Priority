@@ -235,7 +235,7 @@ class SingletonSession(PylinkEyetrackerSession):
                                                               [float(duration) for duration in phases.values()]
                                                           ),
                                                           phase_names=tuple(phases.keys()),
-                                                          parameters=self.trial_parameters,
+                                                          parameters=_trial_parameters,
                                                           stimulus1=stimulus1,
                                                           stimulus2=stimulus2,
                                                           fixation_circle=fixation_circle,
