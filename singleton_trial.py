@@ -8,8 +8,6 @@ import psychtoolbox as ptb
 from psychopy.visual.elementarray import ElementArrayStim
 from psychopy.visual.circle import Circle
 from psychopy import event, visual
-from psychopy import prefs
-prefs.hardware['audioLib'] = ['PTB']
 from psychopy import sound
 
 import utils
