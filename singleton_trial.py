@@ -47,7 +47,7 @@ class SingletonTrial(Trial):
         self.response = None
         self.target_pos = parameters['target_pos']
         self.distractor_pos = parameters['distractor_pos']
-        self.self.SOA = parameters['SOA']
+        self.SOA = parameters['SOA']
         self.bg_orientation = parameters['bg_orientation']
         self.target_orientation = parameters["target_orientation"]
         self.distractor_orientation = parameters["distractor_orientation"]
