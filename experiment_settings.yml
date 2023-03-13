@@ -39,7 +39,7 @@ window_extra: # refers to the parameters for the OLD Psychopy Window class (new 
   mac_bool: False #True #False
 
 paths:
-  curr_dir: 'lab' # 'local'
+  curr_dir:  'local'
   data_pth: {'lab': 'C:\Users\crowding_search_2\DATA\', 'srvr': '\\labssrv\crowding_search_2\DATA'}
 
 eyetracker:
