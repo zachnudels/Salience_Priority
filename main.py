@@ -45,7 +45,7 @@ def main():
     print('saving files in %s' % output_dir)
 
     # if file already exists
-    output_str = {sj_num}
+    output_str = str(sj_num)
     behav_file = op.join(output_dir, f"behavioral_data_mieke{sj_num}.pickle")
 
     if op.exists(behav_file):
@@ -62,7 +62,7 @@ def main():
                                 output_dir=output_dir,
                                 eyetracker_on=True,
                                 settings_file='experiment_settings.yml',
-                                behav_file=behav_file
+                                behav_file=behav_file,
                                 subject_number=sj_num,
                                 exp_num=exp_num)
 

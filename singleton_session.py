@@ -75,7 +75,7 @@ class SingletonSession(PylinkEyetrackerSession):
                                    f"{self.instructions['distractor_direction']} "
                                    f"({self.instructions['distractor_symbol']})."
                                    f"\n Before each trial, press the -spacebar- to start"
-                                   f"\n Press the -spacebar- to continue.")
+                                   f"\n\n Press the -spacebar- to continue.")
         
         draw_instructions(self.win, this_instruction_string, keys='space')
         
@@ -264,7 +264,7 @@ class SingletonSession(PylinkEyetrackerSession):
                                                           stimulus1=stimulus1,
                                                           stimulus2=stimulus2,
                                                           tone=tone,
-                                                          behavioural_files=self.behav_file,
+                                                          behavioural_file=self.behav_file,
                                                           fixation_circle=fixation_circle,
                                                           target_circle=target_circles[key],
                                                           distractor_circle=dist_circles[key],
