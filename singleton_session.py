@@ -201,8 +201,13 @@ class SingletonSession(PylinkEyetrackerSession):
                       len(self.SOAs) *
                       len(possible_singleton_locations))
         
-        print(num_trials)
-        trials_per_block = num_trials / self.num_blocks
+        print("num_trials: ", num_trials)
+        if num_trials % self.num_blocks != 0:
+            raise RuntimeError("Blocks won't divide trials evenly. Change experiment settings")
+            self.close()
+
+        trials_per_block = num_trials // self.num_blocks
+        
         trial_indices = np.arange(num_trials)
         # np.random.shuffle(trial_indices)  # Randomise trials
         trial_i = 0
@@ -286,6 +291,7 @@ class SingletonSession(PylinkEyetrackerSession):
 
         # if not self.debug:
         # TODO Check how to construct practice trials
+        print("tpb: ", trials_per_block)
         self.practice_trials = np.random.choice(self.trials[:trials_per_block], # Ensures no end_of_block trials
                                                 self.settings["study"][self.exp_str]["practice_trials"])
         print(len(self.practice_trials))

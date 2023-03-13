@@ -72,6 +72,7 @@ class SingletonTrial(Trial):
 
         self.behavioural_file = behavioural_file
         self.debug=debug
+        self.old_phase = -1
 
         # self.singletons = singletons
         # self.target_stim = target_stim
@@ -107,26 +108,27 @@ class SingletonTrial(Trial):
             #     f"trial {str(self.trial_nr)}_{str(round(np.nanmean(self.session.RTs) * 1000))}_{str(np.round(np.nanmean(self.to_target_list) * 100))}")
 
             # self.session.win.flip()
-            self.session.tracker.sendMessage("fix_display")  # Logging to EDF
+            if self.phase != self.old_phase:
+                self.session.tracker.sendMessage("fix_display")  # Logging to EDF
 
-            # logging vars to edf file
-            # TODO: to ensure logging works - CHECK everything is being logged. Maybe can make one long string with returns
-            # TODO: in it. Check with Elle if this would still work for Analysis
-            # Maybe check docs to see how many log calls can be made sequentially
-            initialization_log_string = f"start_trial" \
-                                        f"\nTRIAL_VAR trial_nr {self.trial_nr}" \
-                                        f"\nTRIAL_VAR target_pos {self.target_pos}" \
-                                        f"\nTRIAL_VAR dist_pos {self.distractor_pos}" \
-                                        f"\nTRIAL_VAR target_co_x {self.target_pos[0]}" \
-                                        f"\nTRIAL_VAR target_co_y {self.target_pos[1]}" \
-                                        f"\nTRIAL_VAR distractor_co_x {self.distractor_pos[0]}" \
-                                        f"\nTRIAL_VAR distractor_co_y {self.distractor_pos[1]}" \
-                                        f"\nTRIAL_VAR background_orientation {self.bg_orientation}" \
-                                        f"\nTRIAL_VAR ISI {self.SOA}" \
-                                        f"\nTRIAL_VAR practice {self.parameters['practice']}" \
-                                        f"\nTRIAL_VAR target_salience {self.parameters['target_salience']}"
+                # logging vars to edf file
+                # TODO: to ensure logging works - CHECK everything is being logged. Maybe can make one long string with returns
+                # TODO: in it. Check with Elle if this would still work for Analysis
+                # Maybe check docs to see how many log calls can be made sequentially
+                initialization_log_string = f"start_trial" \
+                                            f"\nTRIAL_VAR trial_nr {self.trial_nr}" \
+                                            f"\nTRIAL_VAR target_pos {self.target_pos}" \
+                                            f"\nTRIAL_VAR dist_pos {self.distractor_pos}" \
+                                            f"\nTRIAL_VAR target_co_x {self.target_pos[0]}" \
+                                            f"\nTRIAL_VAR target_co_y {self.target_pos[1]}" \
+                                            f"\nTRIAL_VAR distractor_co_x {self.distractor_pos[0]}" \
+                                            f"\nTRIAL_VAR distractor_co_y {self.distractor_pos[1]}" \
+                                            f"\nTRIAL_VAR background_orientation {self.bg_orientation}" \
+                                            f"\nTRIAL_VAR ISI {self.SOA}" \
+                                            f"\nTRIAL_VAR practice {self.parameters['practice']}" \
+                                            f"\nTRIAL_VAR target_salience {self.parameters['target_salience']}"
 
-            self.session.tracker.sendMessage(initialization_log_string)
+                self.session.tracker.sendMessage(initialization_log_string)
 
             # print("End initialization")
             self.session.fixation.draw()
@@ -138,20 +140,27 @@ class SingletonTrial(Trial):
         elif self.phase_names[int(self.phase)] == 'stimulus1':
             self.stimulus1.draw()
             # print("Draw stim1")
-            self.session.tracker.sendMessage(self.parameters["stimulus1_log"])
-            self.t0 = self.session.clock.getTime()  # TODO: Check if t0 needs to be accurate (target displayed rather than either)
+            if self.old_phase != self.phase:
+                self.session.tracker.sendMessage(self.parameters["stimulus1_log"])
+                self.t0 = self.session.clock.getTime()  # TODO: Check if t0 needs to be accurate (target displayed rather than either)
 
         elif self.phase_names[int(self.phase)] == 'stimulus2':
             self.stimulus1.draw()
             self.stimulus2.draw()
-            self.session.tracker.sendMessage(self.parameters["stimulus2_log"])
+
+            if self.old_phase != self.phase:
+                self.session.tracker.sendMessage(self.parameters["stimulus2_log"])
+
             eye_ev = self.session.tracker.getNextData()
+            print("EYE_EV", eye_ev)
+            print(pylink.ENDSACC)
             got_sac = False
             if (eye_ev is not None) and (eye_ev == pylink.ENDSACC):
                 eye_dat = self.session.tracker.getFloatData()
                 self.endtime = eye_dat.getEndTime()  # offset time
                 self.startpos = eye_dat.getStartGaze()  # start position
                 self.endpos = eye_dat.getEndGaze()  # end position
+                print("EYEDATA ", self.endtime, self.starpos, self.endpos)
                 got_sac = True
 
             if got_sac:
@@ -164,30 +173,31 @@ class SingletonTrial(Trial):
             
 
             self.session.fixation.draw()
-            self.success = self.check_saccade(self.endpos)
-            self.session.tracker.sendMessage('TRIAL_VAR end_position ' + str(self.endpos))
-            self.session.tracker.sendMessage('TRIAL_VAR succes ' + str(self.success))
+            if self.old_phase != self.phase:
+                self.success = self.check_saccade(self.endpos)
+                self.session.tracker.sendMessage('TRIAL_VAR end_position ' + str(self.endpos))
+                self.session.tracker.sendMessage('TRIAL_VAR succes ' + str(self.success))
 
-            self.session.tracker.sendMessage('stop_trial')
-            # self.session.tracker.stop_recording()
-            self.session.results[self.trial_nr, :] = [self.parameters["subject_number"],
-                                                      self.trial_nr,
-                                                      self.parameters["target_orientation"],
-                                                      self.parameters["distractor_orientation"],
-                                                      self.bg_orientation,
-                                                      self.target_pos,
-                                                      self.distractor_pos,
-                                                      self.SOA,
-                                                      self.success,
-                                                      self.endpos,
-                                                      self.parameters["target_salience"],
-                                                      self.RT]
+                self.session.tracker.sendMessage('stop_trial')
+                # self.session.tracker.stop_recording()
+                self.session.results[self.trial_nr, :] = [self.parameters["subject_number"],
+                                                        self.trial_nr,
+                                                        self.parameters["target_orientation"],
+                                                        self.parameters["distractor_orientation"],
+                                                        self.bg_orientation,
+                                                        self.target_pos,
+                                                        self.distractor_pos,
+                                                        self.SOA,
+                                                        self.success,
+                                                        self.endpos,
+                                                        self.parameters["target_salience"],
+                                                        self.RT]
 
-            self.save_results()
+                self.save_results()
 
         elif self.phase_names[int(self.phase)] == 'end_of_block':
-            print(self.trial_nr)
-            avg_RT = np.round(np.nanmean(self.session.RTs) * 1000)
+            if len(self.session.RTs) != 0: # TODO: Remove
+                avg_RT = np.round(np.nanmean(self.session.RTs) * 1000)
             this_instruction_string = (f"This was block {self.block_num}"
                                    f"\n\n Your average response time was {avg_RT} ms."
                                    f"\n Well done! "
@@ -198,8 +208,11 @@ class SingletonTrial(Trial):
                                     anchorHoriz='center', anchorVert='center')
 
             text1.draw()
-            self.session.RTs = []
+            
+            # self.session.RTs = []
             self.save_results()
+
+        self.old_phase = self.phase
 
         # print("Draw fixaxtion")
         # utils.draw_instructions(self.session.win, "TEST", keys='space')

@@ -8,8 +8,8 @@ study:
   exp2:
     SOAs: [-100, -0, 100]
     num_reps: 1
-    num_blocks: 10
-    practice_trials: 20
+    num_blocks: 1
+    practice_trials: 1
 
 window: # refers to the parameters for the Psychopy Window class
   units: pix
@@ -46,7 +46,6 @@ eyetracker:
   address: '100.1.1.1' #  Eyelink eyetracker IP
   dot_size: 0.15  # in dva
   options: # Eyelink specific settings
-    active_eye: left  # [right]
     calibration_type: HV9  # [H3, HV3, HV5, HV9]
     sample_rate: 1000
     calibration_area_proportion: 0.7 0.7 #0.88 0.83
@@ -58,20 +57,19 @@ stimuli:
   singleton_orientation: [30, -30]
   x_count: 29
   y_count: 17
-  spacing: 0.42
+  spacing: 0.9
   line_length: 0.4  # 19 * 2
   line_width: 0.06  # 3 * 2
   line_color: "#AAAAAA"
   jitter: 0
   fix_dot_size_deg: 0.05
-  fix_line_size_deg: 0.5
-  fix_line_width_deg: 0.1
+  fix_line_size_deg: 0.7
+  fix_line_width_deg: 0.3
   fix_color: [ 1, 1, 1 ] # psychopy rgb white]
   fix_check_rad: 2
 
 trial_info:
-  practice_trial_num: 50
-  break_trial_num: 50
+  break_trial_num: 3
   initialization_time: 2
   ITI: 0.5
   max_response_time: 5
