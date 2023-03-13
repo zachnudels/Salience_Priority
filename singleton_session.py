@@ -17,7 +17,7 @@ Coordinate = Tuple[int, int]
 
 
 class SingletonSession(PylinkEyetrackerSession):
-    def __init__(self, output_str, output_dir, settings_file, behav_file, eyetracker_on, subject_number, exp_num):
+    def __init__(self, output_str, output_dir, settings_file, behav_file, eyetracker_on, subject_number, exp_num, debug):
         super().__init__(output_str=output_str, output_dir=output_dir, settings_file=settings_file,
                          eyetracker_on=eyetracker_on)
 
@@ -29,6 +29,7 @@ class SingletonSession(PylinkEyetrackerSession):
         self.RTs = []
         self.to_target_list = []
         self.exp_num = exp_num
+        self.debug = debug
 
         if subject_number % 2 == 0:
             self.trial_parameters["target_orientation"] = self.settings["stimuli"]["singleton_orientation"][0]
@@ -56,6 +57,20 @@ class SingletonSession(PylinkEyetrackerSession):
             "distractor_direction": ("left" if self.trial_parameters["distractor_orientation"] < 0 else "right"),
             "distractor_symbol": ("\\" if self.trial_parameters["distractor_orientation"] < 0 else "/"),
         }
+
+                # TODO: Fixation point
+        line_size_pix = deg2pix(self.settings["stimuli"]["fix_line_size_deg"], self.win.monitor)
+        
+        line_width_pix = deg2pix(self.settings["stimuli"]["fix_line_width_deg"], self.win.monitor)
+        
+        self.fixation = visual.ShapeStim(self.win,
+                                         vertices=((0, -line_size_pix / 2), (0, line_size_pix / 2),
+                                                   (0, 0),
+                                                   (-line_size_pix / 2, 0), (line_size_pix / 2, 0)),
+                                         lineWidth=line_width_pix,
+                                         closeShape=False,
+                                         lineColor=self.settings['stimuli']['fix_color'])
+        ########################
 
     def run(self):
         self.create_trials()
@@ -104,6 +119,9 @@ class SingletonSession(PylinkEyetrackerSession):
 
         draw_instructions(self.win, this_instruction_string, keys='space')
 
+        if self.eyetracker_on:
+            self.start_recording_eyetracker()
+
         for trial in self.trials:
             trial.run()
 
@@ -122,25 +140,7 @@ class SingletonSession(PylinkEyetrackerSession):
 
         possible_singleton_locations = self.construct_singleton_pairs(pixel_spacing)
 
-        # TODO: Fixation point
-        # line_size_pix = self.settings['stimuli']['fix_line_size_deg'] / utils.dva_per_pix(
-        #     height_cm=self.settings['monitor_extra']['height'],
-        #     distance_cm=self.settings['monitor']['distance'],
-        #     vert_res_pix=self.screen[-1])
-        #
-        # line_width_pix = self.settings['stimuli']['fix_line_width_deg'] / utils.dva_per_pix(
-        #     height_cm=self.settings['monitor_extra']['height'],
-        #     distance_cm=self.settings['monitor']['distance'],
-        #     vert_res_pix=self.screen[-1])
-        #
-        # fixation = visual.ShapeStim(self.win,
-        #                                  vertices=((0, -line_size_pix / 2), (0, line_size_pix / 2),
-        #                                            (0, 0),
-        #                                            (-line_size_pix / 2, 0), (line_size_pix / 2, 0)),
-        #                                  lineWidth=line_width_pix,
-        #                                  closeShape=False,
-        #                                  lineColor=self.settings['stimuli']['fix_color'])
-        ########################
+
         # # init variables for feedback
         #
         # check if they moved their eyes before targets are shown
@@ -229,7 +229,7 @@ class SingletonSession(PylinkEyetrackerSession):
                         grid = possible_grids[key]
                         singletons = possible_singletons[key]
 
-                        initialization_time = self.settings["trial_info"]["initialization_time"]
+                        initialization_time = self.settings["trial_info"]["initialization_time"] * 10
 
                         if SOA < 0:
                             stimulus1 = grid
@@ -264,6 +264,7 @@ class SingletonSession(PylinkEyetrackerSession):
                                                           stimulus1=stimulus1,
                                                           stimulus2=stimulus2,
                                                           tone=tone,
+                                                          debug=self.debug,
                                                           behavioural_file=self.behav_file,
                                                           fixation_circle=fixation_circle,
                                                           target_circle=target_circles[key],

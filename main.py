@@ -28,6 +28,12 @@ def main():
     sj_num = int(sys.argv[1])  # subject number
     exp_num = int(sys.argv[2])  # run number
 
+    debug = False
+    if len(sys.argv) == 4:
+        if sys.argv[3] == "-D":
+            debug = True
+    
+
     # TODO: Check if practice always in same file?
     # task name dictionary
     print(f"Running experiment {exp_num} for subject {sj_num}")
@@ -64,7 +70,8 @@ def main():
                                 settings_file='experiment_settings.yml',
                                 behav_file=behav_file,
                                 subject_number=sj_num,
-                                exp_num=exp_num)
+                                exp_num=exp_num,
+                                debug=debug)
 
     exp_sess.run()
 

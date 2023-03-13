@@ -31,6 +31,7 @@ class SingletonTrial(Trial):
                  stimulus2: ElementArrayStim,
                  tone: sound.Sound,
                  behavioural_file: str,
+                 debug: bool,
                  fixation_circle: Circle,
                  target_circle: Circle,
                  distractor_circle: Circle,
@@ -53,6 +54,11 @@ class SingletonTrial(Trial):
         self.target_orientation = parameters["target_orientation"]
         self.distractor_orientation = parameters["distractor_orientation"]
 
+        # Delete tuples from parameters since they cannot be logged
+        del parameters["target_pos"]
+        del parameters["distractor_pos"]
+
+
         self.stimulus1 = stimulus1
         self.stimulus2 = stimulus2
 
@@ -65,12 +71,15 @@ class SingletonTrial(Trial):
         self.a_sound = tone
 
         self.behavioural_file = behavioural_file
+        self.debug=debug
 
         # self.singletons = singletons
         # self.target_stim = target_stim
         # self.distractor_stim = distractor_stim
 
     def draw(self):
+        print('phase', self.phase_names[int(self.phase)])
+        print(self.parameters)
         # TODO: CHECK + What happens at block end??
         # check to see if it's time for a break
 
@@ -80,17 +89,20 @@ class SingletonTrial(Trial):
         if self.phase_names[int(self.phase)] == 'initialization':
             # self.session.tracker deals with everything here
             driftCheck = False
-            while not driftCheck:
-                driftCheck = self.session.tracker.doDriftCorrection(
-                    self.session.settings["window_extra"]["size"][0] / 2.0,
-                    self.session.settings["window_extra"]["size"][1] / 2.0)
-                # self.session.win.flip()
+            if not self.debug:
+                while not driftCheck:
+                    print("Drift check")
+                    driftCheck = self.session.tracker.doDriftCorrect(
+                        self.session.settings["window_extra"]["size"][0] // 2,
+                        self.session.settings["window_extra"]["size"][1] // 2,
+                        0,
+                        0)
+                    # self.session.win.flip()
+                    print("drift done")
 
-            self.session.tracker.start_recording()
-            self.session.tracker.status_msg(
-                f"trial {str(self.trial_nr)}_{str(round(np.nanmean(self.session.RTs) * 1000))}_{str(np.round(np.nanmean(self.to_target_list) * 100))}")
+            # self.session.tracker.sendMessage(
+            #     f"trial {str(self.trial_nr)}_{str(round(np.nanmean(self.session.RTs) * 1000))}_{str(np.round(np.nanmean(self.to_target_list) * 100))}")
 
-            self.session.fixation.draw()
             # self.session.win.flip()
             self.session.tracker.sendMessage("fix_display")  # Logging to EDF
 
@@ -102,10 +114,10 @@ class SingletonTrial(Trial):
                                         f"\nTRIAL_VAR trial_nr {self.trial_nr}" \
                                         f"\nTRIAL_VAR target_pos {self.target_pos}" \
                                         f"\nTRIAL_VAR dist_pos {self.distractor_pos}" \
-                                        f"\nTRIAL_VAR target_co_x {self.parameters['target_pos'][0]}" \
-                                        f"\nTRIAL_VAR target_co_y {self.parameters['target_pos'][1]}" \
-                                        f"\nTRIAL_VAR distractor_co_x {self.parameters['distractor_pos'][0]}" \
-                                        f"\nTRIAL_VAR distractor_co_y {self.parameters['distractor_pos'][1]}" \
+                                        f"\nTRIAL_VAR target_co_x {self.target_pos[0]}" \
+                                        f"\nTRIAL_VAR target_co_y {self.target_pos[1]}" \
+                                        f"\nTRIAL_VAR distractor_co_x {self.distractor_pos[0]}" \
+                                        f"\nTRIAL_VAR distractor_co_y {self.distractor_pos[1]}" \
                                         f"\nTRIAL_VAR background_orientation {self.bg_orientation}" \
                                         f"\nTRIAL_VAR ISI {self.SOA}" \
                                         f"\nTRIAL_VAR practice {self.parameters['practice']}" \
@@ -113,30 +125,31 @@ class SingletonTrial(Trial):
 
             self.session.tracker.sendMessage(initialization_log_string)
 
+            print("End initialization")
+
             # session.tracker.sendMessage("TRIAL_VAR target_salience %s" % target_salience)
             # exp.sleep(2)
 
         elif self.phase_names[int(self.phase)] == 'stimulus1':
             self.stimulus1.draw()
+            print("Draw stim1")
             self.session.tracker.sendMessage(self.parameters["stimulus1_log"])
             self.t0 = self.session.clock.getTime()  # TODO: Check if t0 needs to be accurate (target displayed rather than either)
 
         elif self.phase_names[int(self.phase)] == 'stimulus2':
             self.stimulus2.draw()
             self.session.tracker.sendMessage(self.parameters["stimulus2_log"])
-            got_sac = False
-            while not got_sac:
-                eye_ev = self.session.tracker.getNextData()
-                if (eye_ev is not None) and (eye_ev == pylink.ENDSACC):
-                    eye_dat = self.session.tracker.getFloatData()
-                    self.endtime = eye_dat.getEndTime()  # offset time
-                    self.startpos = eye_dat.getStartGaze()  # start position
-                    self.endpos = eye_dat.getEndGaze()  # end position
-                    
-                    got_sac = True
+            eye_ev = self.session.tracker.getNextData()
+            if (eye_ev is not None) and (eye_ev == pylink.ENDSACC):
+                eye_dat = self.session.tracker.getFloatData()
+                self.endtime = eye_dat.getEndTime()  # offset time
+                self.startpos = eye_dat.getStartGaze()  # start position
+                self.endpos = eye_dat.getEndGaze()  # end position
+                got_sac = True
 
-            self.response, self.RT = self.response_check(self.t0, self.practice)  # TODO: Practice stuff
-            if self.response is not None:
+            if got_sac:
+                self.response, self.RT = self.response_check(self.t0, self.practice)  # TODO: Practice stuff
+            else:
                 self.stop_phase()
 
             self.session.RTs.append(self.RT)
@@ -184,10 +197,18 @@ class SingletonTrial(Trial):
             avg_RT = np.round(np.nanmean(self.session.RTs) * 1000)
             self.give_feedback(avg_RT)
             self.session.RTs = []
+            self.save_results()
+
+        print("Draw fixaxtion")
+        utils.draw_instructions(self.session.win, "TEST", keys='space')
+        
+
+        self.session.fixation.draw()
+        # print(self.parameters)
 
         # saving the results matrix
 
-        self.save_results()
+        
 
     def get_events(self):
         """ Logs responses/triggers """
@@ -195,7 +216,7 @@ class SingletonTrial(Trial):
                 timeStamped=self.session.clock):  # list of of (keyname, time) relative to Clock’s last reset
             if len(ev) > 0:
                 if ev in ['q']:
-                    print('trial canceled by user')
+                    print('trial cancelled by user')
                     self.session.close()
                     self.session.quit()
 
@@ -298,7 +319,7 @@ class SingletonTrial(Trial):
             if len(ev) > 0:
                 if ev in ['q']:
                     print('trial canceled by user')
-                    self.session.close_all()
+                    self.session.close()
                     self.session.quit()
 
 #
