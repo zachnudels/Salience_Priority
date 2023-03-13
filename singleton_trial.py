@@ -78,8 +78,10 @@ class SingletonTrial(Trial):
         # self.distractor_stim = distractor_stim
 
     def draw(self):
-        print('phase', self.phase_names[int(self.phase)])
-        print(self.parameters)
+        # for i in range(len(self.phase_names)):
+        #     print(self.phase_names[i], self.phase_durations[i])
+        # print('phase', self.phase_names[int(self.phase)])
+        # print(self.parameters)
         # TODO: CHECK + What happens at block end??
         # check to see if it's time for a break
 
@@ -125,14 +127,16 @@ class SingletonTrial(Trial):
 
             self.session.tracker.sendMessage(initialization_log_string)
 
-            print("End initialization")
+            # print("End initialization")
+            self.session.fixation.draw()
+
 
             # session.tracker.sendMessage("TRIAL_VAR target_salience %s" % target_salience)
             # exp.sleep(2)
 
         elif self.phase_names[int(self.phase)] == 'stimulus1':
             self.stimulus1.draw()
-            print("Draw stim1")
+            # print("Draw stim1")
             self.session.tracker.sendMessage(self.parameters["stimulus1_log"])
             self.t0 = self.session.clock.getTime()  # TODO: Check if t0 needs to be accurate (target displayed rather than either)
 
@@ -140,6 +144,7 @@ class SingletonTrial(Trial):
             self.stimulus2.draw()
             self.session.tracker.sendMessage(self.parameters["stimulus2_log"])
             eye_ev = self.session.tracker.getNextData()
+            got_sac = False
             if (eye_ev is not None) and (eye_ev == pylink.ENDSACC):
                 eye_dat = self.session.tracker.getFloatData()
                 self.endtime = eye_dat.getEndTime()  # offset time
@@ -148,20 +153,21 @@ class SingletonTrial(Trial):
                 got_sac = True
 
             if got_sac:
-                self.response, self.RT = self.response_check(self.t0, self.practice)  # TODO: Practice stuff
-            else:
+                self.response, self.RT = self.response_check(self.t0, self.practice)  # TODO: Practice stuff             
+                self.session.RTs.append(self.RT)
                 self.stop_phase()
-
-            self.session.RTs.append(self.RT)
 
         elif self.phase_names[int(self.phase)] == 'ITI':
             # now check if the eye movement was made correctly
+            
+
+            self.session.fixation.draw()
             self.success = self.check_saccade(self.endpos)
             self.session.tracker.sendMessage('TRIAL_VAR end_position ' + str(self.endpos))
             self.session.tracker.sendMessage('TRIAL_VAR succes ' + str(self.success))
 
             self.session.tracker.sendMessage('stop_trial')
-            self.session.tracker.stop_recording()
+            # self.session.tracker.stop_recording()
             self.session.results[self.trial_nr, :] = [self.parameters["subject_number"],
                                                       self.trial_nr,
                                                       self.parameters["target_orientation"],
@@ -199,14 +205,13 @@ class SingletonTrial(Trial):
             self.session.RTs = []
             self.save_results()
 
-        print("Draw fixaxtion")
-        utils.draw_instructions(self.session.win, "TEST", keys='space')
+        # print("Draw fixaxtion")
+        # utils.draw_instructions(self.session.win, "TEST", keys='space')
         
-
-        self.session.fixation.draw()
         # print(self.parameters)
 
         # saving the results matrix
+        # print(blue)
 
         
 
@@ -296,6 +301,8 @@ class SingletonTrial(Trial):
         -------
 
         """
+        if endpos is None:
+            return False
         x_sample = endpos[0] - self.settings['window_extra']['size'][0] / 2
         y_sample = (endpos[1] - (self.settings['window_extra']['size'][1] / 2)) * -1
         curPos = (x_sample, y_sample)

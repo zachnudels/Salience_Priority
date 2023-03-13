@@ -6,7 +6,7 @@ preferences:
 study:
   no_exps: 2
   exp2:
-    SOAs: [-100, -30, 0, 30, 100]
+    SOAs: [5000, -30, 0, 30, 100]
     num_reps: 65
     num_blocks: 10
     practice_trials: 20
@@ -54,7 +54,7 @@ eyetracker:
 
 stimuli:
   num_singletons: 2
-  bg_orientation: [-10, 10]
+  bg_orientation: [10]#[-10, 10]
   singleton_orientation: [30, -30]
   x_count: 29
   y_count: 17
@@ -71,8 +71,8 @@ stimuli:
 trial_info:
   practice_trial_num: 50
   break_trial_num: 50
-  initialization_time: 0.2
+  initialization_time: 2
   ITI: 0.5
-  max_response_time: 2
+  max_response_time: 5
 
 

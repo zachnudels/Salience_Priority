@@ -30,6 +30,7 @@ class SingletonSession(PylinkEyetrackerSession):
         self.to_target_list = []
         self.exp_num = exp_num
         self.debug = debug
+        self.screen = np.array([self.win.size[0], self.win.size[1]])
 
         if subject_number % 2 == 0:
             self.trial_parameters["target_orientation"] = self.settings["stimuli"]["singleton_orientation"][0]
@@ -42,7 +43,8 @@ class SingletonSession(PylinkEyetrackerSession):
         self.exp_str = f"exp{self.exp_num}"
         self.num_reps = self.settings["study"][self.exp_str]["num_reps"]
         self.bg_orientations = self.settings["stimuli"]["bg_orientation"]
-        self.SOAs = self.settings["study"][self.exp_str]["SOAs"]
+        self.SOAs = [SOA*1e-3 for SOA in self.settings["study"][self.exp_str]["SOAs"]]
+        print(self.SOAs)
         self.num_blocks = self.settings["study"][self.exp_str]["num_blocks"]
 
         
@@ -110,14 +112,15 @@ class SingletonSession(PylinkEyetrackerSession):
 
         draw_instructions(self.win, this_instruction_string, keys='space')
 
-        for trial in self.practice_trials:
-            trial.run()
+        if not self.debug:
+            for trial in self.practice_trials:
+                trial.run()
 
-        this_instruction_string = (f"You will now start with the actual experiment."
-                                   f"\n\nGoodluck."
-                                   f"\n\nPlease press the -spacebar- to begin.")
+            this_instruction_string = (f"You will now start with the actual experiment."
+                                    f"\n\nGoodluck."
+                                    f"\n\nPlease press the -spacebar- to begin.")
 
-        draw_instructions(self.win, this_instruction_string, keys='space')
+            draw_instructions(self.win, this_instruction_string, keys='space')
 
         if self.eyetracker_on:
             self.start_recording_eyetracker()
@@ -139,6 +142,7 @@ class SingletonSession(PylinkEyetrackerSession):
                                        pixel_spacing)
 
         possible_singleton_locations = self.construct_singleton_pairs(pixel_spacing)
+        print(possible_singleton_locations)
 
 
         # # init variables for feedback
@@ -192,7 +196,7 @@ class SingletonSession(PylinkEyetrackerSession):
                       len(possible_singleton_locations))
         trials_per_block = num_trials / self.num_blocks
         trial_indices = np.arange(num_trials)
-        np.random.shuffle(trial_indices)  # Randomise trials
+        # np.random.shuffle(trial_indices)  # Randomise trials
         trial_i = 0
 
         tone = sound.Sound('A')
@@ -222,21 +226,21 @@ class SingletonSession(PylinkEyetrackerSession):
                         _trial_parameters["target_pos"] = target_coord
                         _trial_parameters["distractor_pos"] = distractor_coord
                         _trial_parameters["bg_orientation"] = bg_orientation
-                        _trial_parameters["SOA"] = SOA * 1e-3
+                        _trial_parameters["SOA"] = SOA
 
                         _trial_parameters["practice"] = False
 
                         grid = possible_grids[key]
                         singletons = possible_singletons[key]
 
-                        initialization_time = self.settings["trial_info"]["initialization_time"] * 10
+                        initialization_time = self.settings["trial_info"]["initialization_time"] 
 
                         if SOA < 0:
                             stimulus1 = grid
                             _trial_parameters["stimulus1_log"] = "stimuli_show"
                             stimulus2 = singletons
                             _trial_parameters["stimulus2_log"] = "target_display"
-                            initialization_time -= SOA
+                            initialization_time += SOA # Adding a negative SOA will decrease time to ensure singletons presented after same duration
                         else:
                             stimulus1 = singletons
                             _trial_parameters["stimulus1_log"] = "target_display"
@@ -272,13 +276,14 @@ class SingletonSession(PylinkEyetrackerSession):
                                                           target_circle_big=target_big_circles[key],
                                                           distractor_circle_big=dist_big_circles[key]))
 
-        self.practice_trials = np.random.choice(self.trials, self.settings["study"][self.exp_str]["practice_trials"])
-        for i in range(len(self.practice_trials)):
-            self.practice_trials[i].trial_num = i
-            self.practice_trials[i].parameters["practice"] = True
+        if not self.debug:
+            self.practice_trials = np.random.choice(self.trials, self.settings["study"][self.exp_str]["practice_trials"])
+            for i in range(len(self.practice_trials)):
+                self.practice_trials[i].trial_num = i
+                self.practice_trials[i].parameters["practice"] = True
 
-            if i == len(self.practice_trials) - 1:
-                phases["end_of_block"] = 1000
+                if i == len(self.practice_trials) - 1:
+                    phases["end_of_block"] = 1000
 
             # TODO: Change what makes it a practice: longer time somewhere?
             # practice_trial.phase_duration
