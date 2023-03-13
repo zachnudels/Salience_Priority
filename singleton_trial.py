@@ -1,6 +1,7 @@
 import numpy as np
 
 from exptools2.core import Trial, Session
+import pylink
 from typing import Dict, List, Optional, Tuple
 
 import pickle
@@ -123,7 +124,16 @@ class SingletonTrial(Trial):
         elif self.phase_names[int(self.phase)] == 'stimulus2':
             self.stimulus2.draw()
             self.session.tracker.sendMessage(self.parameters["stimulus2_log"])
-            self.endtime, self.startpos, self.endpos = self.session.tracker.wait_for_saccade_end()
+            got_sac = False
+            while not got_sac:
+                eye_ev = self.session.tracker.getNextData()
+                if (eye_ev is not None) and (eye_ev == pylink.ENDSACC):
+                    eye_dat = self.session.tracker.getFloatData()
+                    self.endtime = eye_dat.getEndTime()  # offset time
+                    self.startpos = eye_dat.getStartGaze()  # start position
+                    self.endpos = eye_dat.getEndGaze()  # end position
+                    
+                    got_sac = True
 
             self.response, self.RT = self.response_check(self.t0, self.practice)  # TODO: Practice stuff
             if self.response is not None:
