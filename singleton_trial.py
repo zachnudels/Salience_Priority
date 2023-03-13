@@ -186,6 +186,7 @@ class SingletonTrial(Trial):
             self.save_results()
 
         elif self.phase_names[int(self.phase)] == 'end_of_block':
+            print(self.trial_nr)
             avg_RT = np.round(np.nanmean(self.session.RTs) * 1000)
             this_instruction_string = (f"This was block {self.block_num}"
                                    f"\n\n Your average response time was {avg_RT} ms."

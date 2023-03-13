@@ -285,7 +285,9 @@ class SingletonSession(PylinkEyetrackerSession):
                                                           distractor_circle_big=dist_big_circles[key]))
 
         # if not self.debug:
-        self.practice_trials = np.random.choice(self.trials, self.settings["study"][self.exp_str]["practice_trials"])
+        # TODO Check how to construct practice trials
+        self.practice_trials = np.random.choice(self.trials[:trials_per_block], # Ensures no end_of_block trials
+                                                self.settings["study"][self.exp_str]["practice_trials"])
         print(len(self.practice_trials))
         for i in range(len(self.practice_trials)):
             self.practice_trials[i].trial_num = i
