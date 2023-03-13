@@ -94,6 +94,37 @@ def grid_coordinates(x_count: int, y_count: int, pixel_spacing: float):
     return list(zip(X.ravel(), Y.ravel()))
 
 
+def construct_singleton_pairs(pixel_spacing: float, x_count, y_count):
+    print("picel_spacing", pixel_spacing)
+    """
+    Should return every possible combination of target, distractor pairs which are the center of each quadrant
+    I.e., the center of each half diagonal
+    Returns
+    -------
+
+    """
+    # Calculate the indices of the elements on the diagonals that are at the center of their respective quadrants
+    half_x = x_count // 2
+    half_y = y_count // 2
+
+    x_range = np.arange(-pixel_spacing * half_x, pixel_spacing * (1 + half_x), pixel_spacing, dtype=np.int32)
+    y_range = np.arange(-pixel_spacing * half_y, pixel_spacing * (1 + half_y), pixel_spacing, dtype=np.int32)
+
+    small_x = x_range[half_x//2]
+    big_x = x_range[half_x+(half_x//2)]
+    small_y = y_range[half_y//2]
+    big_y = y_range[half_y+(half_y//2)]
+    indices = []
+    indices.append((int(small_x), int(small_y)))  # top_left
+    indices.append((int(small_x), int(big_y)))  # top_right
+    indices.append((int(big_x), int(small_y)))  # bottom_left
+    indices.append((int(big_x), int(big_y)) ) # bottom_right
+
+    # Return all possible combinations where target location != distractor location
+    coords = [(indices1, indices2) for indices1 in indices for indices2 in indices if indices1 != indices2]
+    return [coords[0]]
+
+
 def get_grid_array(positions, ecc_range, convert2pix=True, screen=[1920, 1080],
                    height_cm=30, distance_cm=70,
                    constraint_type='ellipse', constraint_bounds_pix=[500, 700]):

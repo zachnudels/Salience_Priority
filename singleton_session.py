@@ -11,7 +11,7 @@ from psychopy.tools.monitorunittools import deg2pix
 
 from exptools2.core import PylinkEyetrackerSession
 from singleton_trial import SingletonTrial
-from utils import grid_coordinates, dva_per_pix, draw_instructions
+from utils import grid_coordinates, dva_per_pix, draw_instructions, construct_singleton_pairs
 
 Coordinate = Tuple[int, int]
 
@@ -72,6 +72,9 @@ class SingletonSession(PylinkEyetrackerSession):
                                          lineWidth=line_width_pix,
                                          closeShape=False,
                                          lineColor=self.settings['stimuli']['fix_color'])
+        
+        self.max_dist = deg2pix(self.settings["stimuli"]["fix_check_rad"], self.win.monitor)
+        
         ########################
 
     def run(self):
@@ -141,8 +144,9 @@ class SingletonSession(PylinkEyetrackerSession):
                                        self.settings["stimuli"]["y_count"],
                                        pixel_spacing)
 
-        possible_singleton_locations = self.construct_singleton_pairs(pixel_spacing)
-        print(possible_singleton_locations)
+        possible_singleton_locations = construct_singleton_pairs(pixel_spacing,
+                                                                 self.settings["stimuli"]["x_count"],
+                                                                 self.settings["stimuli"]["y_count"])
 
 
         # # init variables for feedback
@@ -194,6 +198,8 @@ class SingletonSession(PylinkEyetrackerSession):
                       len(self.bg_orientations) *
                       len(self.SOAs) *
                       len(possible_singleton_locations))
+        
+        print(num_trials)
         trials_per_block = num_trials / self.num_blocks
         trial_indices = np.arange(num_trials)
         # np.random.shuffle(trial_indices)  # Randomise trials
@@ -290,26 +296,4 @@ class SingletonSession(PylinkEyetrackerSession):
 
         self.results = np.matrix(np.zeros([len(self.trials), 12]), dtype=object)
 
-    def construct_singleton_pairs(self, pixel_spacing: float) -> List[Tuple[Coordinate, Coordinate]]:
-        """
-        Should return every possible combination of target, distractor pairs which are the center of each quadrant
-        I.e., the center of each half diagonal
-        Returns
-        -------
 
-        """
-        # Calculate the indices of the elements on the diagonals that are at the center of their respective quadrants
-        y_count = self.settings["stimuli"]["y_count"]
-        x_count = self.settings["stimuli"]["x_count"]
-
-        little_x = (x_count // 2) // 2 * pixel_spacing
-        little_y = (y_count // 2) // 2 * pixel_spacing
-
-        indices = []
-        indices.append((-little_x, -little_y))  # top_left
-        indices.append((-little_x, little_y))  # top_right
-        indices.append((little_x, -little_y))  # bottom_left
-        indices.append((little_x, little_y))  # bottom_right
-
-        # Return all possible combinations where target location != distractor location
-        return [(indices1, indices2) for indices1 in indices for indices2 in indices if indices1 != indices2]

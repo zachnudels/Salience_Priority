@@ -141,6 +141,7 @@ class SingletonTrial(Trial):
             self.t0 = self.session.clock.getTime()  # TODO: Check if t0 needs to be accurate (target displayed rather than either)
 
         elif self.phase_names[int(self.phase)] == 'stimulus2':
+            self.stimulus1.draw()
             self.stimulus2.draw()
             self.session.tracker.sendMessage(self.parameters["stimulus2_log"])
             eye_ev = self.session.tracker.getNextData()
@@ -183,25 +184,18 @@ class SingletonTrial(Trial):
 
             self.save_results()
 
-            # TODO: Check this
-            # get current gaze
-            curr_gaze = utils.getCurSamp(self.session.tracker, screen=self.session.screen)
-            # calculate distance to center of screen
-            dist2center = utils.distBetweenPoints(curr_gaze, (0, 0))
-
-            # Check if sample is within boundary
-            if dist2center < self.session.maxDist:
-                self.session.gaze_sampleCount += 1
-
-            # If enough samples within boundary
-            if self.session.gaze_sampleCount >= self.session.settings['visual_search']['gaze_sampleCount']:
-                # print('correctFixation')
-                self.session.gaze_sampleCount = 0
-                self.stop_phase()
-
         elif self.phase_names[int(self.phase)] == 'end_of_block':
             avg_RT = np.round(np.nanmean(self.session.RTs) * 1000)
-            self.give_feedback(avg_RT)
+            this_instruction_string = (f"This was block {self.block_num}"
+                                   f"\n\n Your average response time was {avg_RT} ms."
+                                   f"\n Well done! "
+                                   f"\n\nPlease press the -spacebar- to begin.")
+
+
+            text1 = visual.TextStim(self.session.win, text=this_instruction_string, pos=(0, 0), font="Helvetica Neue", height=30,
+                                    anchorHoriz='center', anchorVert='center')
+
+            text1.draw()
             self.session.RTs = []
             self.save_results()
 
@@ -277,18 +271,7 @@ class SingletonTrial(Trial):
         with open(self.behavioural_file, 'wb') as handle:
             pickle.dump(self.session.results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-    def give_feedback(self, avg_RT):
-        text1 = visual.TextStim(self.session.win, text='This was block ' + str(self.block_num), pos=(0, 200))
-        text2 = visual.TextStim(self.session.win, text='Your average response time was ' + str(avg_RT) + ' ms',
-                                pos=(0, -0))
-        text3 = visual.TextStim(self.session.win, text='Press c to continue', pos=(0, -200))
 
-        text1.draw()
-        text2.draw()
-        text3.draw()
-        self.session.win.flip()
-
-        event.waitKeys(keyList=['c'])
 
     def check_saccade(self, endpos):
         """
@@ -328,6 +311,9 @@ class SingletonTrial(Trial):
                     print('trial canceled by user')
                     self.session.close()
                     self.session.quit()
+
+                elif ev in['space'] and self.phase_names[int(self.phase)] == "end_of_block":
+                    self.stop_phase()
 
 #
 # class PracticeSingletonTrial(SingletonTrial):

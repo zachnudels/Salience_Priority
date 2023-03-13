@@ -6,8 +6,8 @@ preferences:
 study:
   no_exps: 2
   exp2:
-    SOAs: [5000, -30, 0, 30, 100]
-    num_reps: 65
+    SOAs: [-100, -0, 100]
+    num_reps: 1
     num_blocks: 10
     practice_trials: 20
 
@@ -54,7 +54,7 @@ eyetracker:
 
 stimuli:
   num_singletons: 2
-  bg_orientation: [10]#[-10, 10]
+  bg_orientation: [10]
   singleton_orientation: [30, -30]
   x_count: 29
   y_count: 17
@@ -66,7 +66,8 @@ stimuli:
   fix_dot_size_deg: 0.05
   fix_line_size_deg: 0.5
   fix_line_width_deg: 0.1
-  fix_color: [ 1, 1, 1 ] # psychopy rgb white
+  fix_color: [ 1, 1, 1 ] # psychopy rgb white]
+  fix_check_rad: 2
 
 trial_info:
   practice_trial_num: 50
