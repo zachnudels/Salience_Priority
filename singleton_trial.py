@@ -29,7 +29,7 @@ class SingletonTrial(Trial):
                  stimulus1: ElementArrayStim,
                  stimulus2: ElementArrayStim,
                  tone: sound.Sound,
-                 behavioural_files: List[str],
+                 behavioural_file: str,
                  fixation_circle: Circle,
                  target_circle: Circle,
                  distractor_circle: Circle,
@@ -62,6 +62,8 @@ class SingletonTrial(Trial):
         self.practice = self.parameters["practice"]
 
         self.a_sound = tone
+
+        self.behavioural_file = behavioural_file
 
         # self.singletons = singletons
         # self.target_stim = target_stim
@@ -233,10 +235,8 @@ class SingletonTrial(Trial):
             horizontal_line.draw()
 
     def save_results(self):
-        # change this based on folder name!
-        for filename in self.behavioural_files:
-            with open(filename, 'wb') as handle:
-                pickle.dump(self.session.results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(self.behavioural_file, 'wb') as handle:
+            pickle.dump(self.session.results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def give_feedback(self, avg_RT):
         text1 = visual.TextStim(self.session.win, text='This was block ' + str(self.block_num), pos=(0, 200))

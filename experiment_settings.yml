@@ -40,7 +40,7 @@ window_extra: # refers to the parameters for the OLD Psychopy Window class (new 
 
 paths:
   curr_dir: 'lab' # 'local'
-  data_pth: {'lab': 'C:\Users\crowding_search_2\Desktop\LocalPC-DATA\'} 
+  data_pth: {'lab': 'C:\Users\crowding_search_2\DATA\', 'srvr': '\\labssrv\crowding_search_2\DATA'}
 
 eyetracker:
   address: '100.1.1.1' #  Eyelink eyetracker IP

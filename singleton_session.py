@@ -17,7 +17,7 @@ Coordinate = Tuple[int, int]
 
 
 class SingletonSession(PylinkEyetrackerSession):
-    def __init__(self, output_str, output_dir, settings_file, eyetracker_on, subject_number, exp_num):
+    def __init__(self, output_str, output_dir, settings_file, behav_file, eyetracker_on, subject_number, exp_num):
         super().__init__(output_str=output_str, output_dir=output_dir, settings_file=settings_file,
                          eyetracker_on=eyetracker_on)
 
@@ -45,9 +45,7 @@ class SingletonSession(PylinkEyetrackerSession):
         self.num_blocks = self.settings["study"][self.exp_str]["num_blocks"]
 
         
-        self.behavioural_files = [f"C:/Users/crowding_search_2/Data/output/sourcedata/behavioral_data_mieke{subject_number}.pickle",
-                             f"C:/Users/crowding_search_2/Desktop/[Server Data] (previously uploaded data can be found here)/behavioral_data_mieke{subject_number}.pickle"]
-        
+        self.behav_file = behav_file
 
         print(self.trial_parameters["target_orientation"], self.trial_parameters["distractor_orientation"])
 
@@ -266,7 +264,7 @@ class SingletonSession(PylinkEyetrackerSession):
                                                           stimulus1=stimulus1,
                                                           stimulus2=stimulus2,
                                                           tone=tone,
-                                                          behavioural_files=self.behavioural_files
+                                                          behavioural_files=self.behav_file,
                                                           fixation_circle=fixation_circle,
                                                           target_circle=target_circles[key],
                                                           distractor_circle=dist_circles[key],
