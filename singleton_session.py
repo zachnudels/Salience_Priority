@@ -98,7 +98,6 @@ class SingletonSession(PylinkEyetrackerSession):
                                    f"\n\n Press the -spacebar- to continue.")
         
         draw_instructions(self.win, this_instruction_string, keys='space')
-        
 
         this_instruction_string = (f"\nTry to be as fast and accurate as possible!"
                                    f"\nMove as soon as you see the target (which is also when the fixation dot in the "
@@ -285,17 +284,18 @@ class SingletonSession(PylinkEyetrackerSession):
                                                           target_circle_big=target_big_circles[key],
                                                           distractor_circle_big=dist_big_circles[key]))
 
-        if not self.debug:
-            self.practice_trials = np.random.choice(self.trials, self.settings["study"][self.exp_str]["practice_trials"])
-            for i in range(len(self.practice_trials)):
-                self.practice_trials[i].trial_num = i
-                self.practice_trials[i].parameters["practice"] = True
+        # if not self.debug:
+        self.practice_trials = np.random.choice(self.trials, self.settings["study"][self.exp_str]["practice_trials"])
+        print(len(self.practice_trials))
+        for i in range(len(self.practice_trials)):
+            self.practice_trials[i].trial_num = i
+            self.practice_trials[i].parameters["practice"] = True
 
-                if i == len(self.practice_trials) - 1:
-                    phases["end_of_block"] = 1000
+            if i == len(self.practice_trials) - 1:
+                phases["end_of_block"] = 1000
 
-            for i in range(len(self.practice_trials[0].phase_durations)):
-                print(self.practice_trials[0].phase_names[i], self.practice_trials[0].phase_durations[i])
+        for i in range(len(self.practice_trials[0].phase_durations)):
+            print(self.practice_trials[0].phase_names[i], self.practice_trials[0].phase_durations[i])
 
             # TODO: Change what makes it a practice: longer time somewhere?
             # practice_trial.phase_duration
