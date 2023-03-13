@@ -80,7 +80,9 @@ class SingletonTrial(Trial):
             # self.session.tracker deals with everything here
             driftCheck = False
             while not driftCheck:
-                driftCheck = self.session.tracker.doDriftCorrection()
+                driftCheck = self.session.tracker.doDriftCorrection(
+                    self.session.settings["window_extra"]["size"][0] / 2.0,
+                    self.session.settings["window_extra"]["size"][1] / 2.0)
                 # self.session.win.flip()
 
             self.session.tracker.start_recording()
