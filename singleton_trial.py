@@ -1,7 +1,7 @@
 import numpy as np
 
 from exptools2.core import Trial, Session
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pickle
 import psychtoolbox as ptb
@@ -28,7 +28,8 @@ class SingletonTrial(Trial):
                  parameters: Dict,
                  stimulus1: ElementArrayStim,
                  stimulus2: ElementArrayStim,
-                 a_sound: sound.Sound,
+                 tone: sound.Sound,
+                 behavioural_files: List[str],
                  fixation_circle: Circle,
                  target_circle: Circle,
                  distractor_circle: Circle,
@@ -60,7 +61,7 @@ class SingletonTrial(Trial):
         self.parameters = parameters
         self.practice = self.parameters["practice"]
 
-        self.a_sound = a_sound
+        self.a_sound = tone
 
         # self.singletons = singletons
         # self.target_stim = target_stim
@@ -77,7 +78,7 @@ class SingletonTrial(Trial):
             # self.session.tracker deals with everything here
             driftCheck = False
             while not driftCheck:
-                driftCheck = self.session.tracker.drift_correction()
+                driftCheck = self.session.tracker.doDriftCorrection()
                 self.session.win.flip()
 
             self.session.tracker.start_recording()
@@ -86,7 +87,7 @@ class SingletonTrial(Trial):
 
             self.session.fixation.draw()
             self.session.win.flip()
-            self.session.tracker.log("fix_display")  # Logging to EDF
+            self.session.tracker.sendMessage("fix_display")  # Logging to EDF
 
             # logging vars to edf file
             # TODO: to ensure logging works - CHECK everything is being logged. Maybe can make one long string with returns
@@ -105,19 +106,19 @@ class SingletonTrial(Trial):
                                         f"\nTRIAL_VAR practice {self.parameters['practice']}" \
                                         f"\nTRIAL_VAR target_salience {self.parameters['target_salience']}"
 
-            self.session.tracker.log(initialization_log_string)
+            self.session.tracker.sendMessage(initialization_log_string)
 
-            # session.tracker.log("TRIAL_VAR target_salience %s" % target_salience)
+            # session.tracker.sendMessage("TRIAL_VAR target_salience %s" % target_salience)
             # exp.sleep(2)
 
         elif self.phase_names[int(self.phase)] == 'stimulus1':
             self.stimulus1.draw()
-            self.session.eyetracker.log(self.parameters["stimulus1_log"])
+            self.session.tracker.sendMessage(self.parameters["stimulus1_log"])
             self.t0 = self.session.clock.getTime()  # TODO: Check if t0 needs to be accurate (target displayed rather than either)
 
         elif self.phase_names[int(self.phase)] == 'stimulus2':
             self.stimulus2.draw()
-            self.session.eyetracker.log(self.parameters["stimulus2_log"])
+            self.session.tracker.sendMessage(self.parameters["stimulus2_log"])
             self.endtime, self.startpos, self.endpos = self.session.tracker.wait_for_saccade_end()
 
             self.response, self.RT = self.response_check(self.t0, self.practice)  # TODO: Practice stuff
@@ -129,10 +130,10 @@ class SingletonTrial(Trial):
         elif self.phase_names[int(self.phase)] == 'ITI':
             # now check if the eye movement was made correctly
             self.success = self.check_saccade(self.endpos)
-            self.session.tracker.log('TRIAL_VAR end_position ' + str(self.endpos))
-            self.session.tracker.log('TRIAL_VAR succes ' + str(self.success))
+            self.session.tracker.sendMessage('TRIAL_VAR end_position ' + str(self.endpos))
+            self.session.tracker.sendMessage('TRIAL_VAR succes ' + str(self.success))
 
-            self.session.tracker.log('stop_trial')
+            self.session.tracker.sendMessage('stop_trial')
             self.session.tracker.stop_recording()
             self.session.results[self.trial_nr, :] = [self.parameters["subject_number"],
                                                       self.trial_nr,
@@ -233,13 +234,9 @@ class SingletonTrial(Trial):
 
     def save_results(self):
         # change this based on folder name!
-        filename = f"C:/Users/RA-Eyelink/Data/behavioral_data_mieke{self.parameters['subject_number']}.pickle"
-        with open(filename, 'wb') as handle:
-            pickle.dump(self.session.results, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        filename = f"//labssrv/Labs/RA-Eyelink/Data/behavioral_data_mieke{self.parameters['subject_number']}.pickle"
-        with open(filename, 'wb') as handle:
-            pickle.dump(self.session.results, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        print('Saved the pickle file!')
+        for filename in self.behavioural_files:
+            with open(filename, 'wb') as handle:
+                pickle.dump(self.session.results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def give_feedback(self, avg_RT):
         text1 = visual.TextStim(self.session.win, text='This was block ' + str(self.block_num), pos=(0, 200))

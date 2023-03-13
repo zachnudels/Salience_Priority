@@ -1,4 +1,5 @@
 from typing import List, Tuple
+import os 
 
 import numpy as np
 from copy import deepcopy
@@ -30,18 +31,25 @@ class SingletonSession(PylinkEyetrackerSession):
         self.exp_num = exp_num
 
         if subject_number % 2 == 0:
-            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["target_orientation"][0]
-            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractor_orientation"][0]
+            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["singleton_orientation"][0]
+            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["singleton_orientation"][1]
 
         else:
-            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["target_orientation"][1]
-            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["distractor_orientation"][1]
+            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["singleton_orientation"][1]
+            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["singleton_orientation"][0]
 
         self.exp_str = f"exp{self.exp_num}"
         self.num_reps = self.settings["study"][self.exp_str]["num_reps"]
         self.bg_orientations = self.settings["stimuli"]["bg_orientation"]
         self.SOAs = self.settings["study"][self.exp_str]["SOAs"]
         self.num_blocks = self.settings["study"][self.exp_str]["num_blocks"]
+
+        
+        self.behavioural_files = [f"C:/Users/crowding_search_2/Data/output/sourcedata/behavioral_data_mieke{subject_number}.pickle",
+                             f"C:/Users/crowding_search_2/Desktop/[Server Data] (previously uploaded data can be found here)/behavioral_data_mieke{subject_number}.pickle"]
+        
+
+        print(self.trial_parameters["target_orientation"], self.trial_parameters["distractor_orientation"])
 
 
         self.instructions = {
@@ -53,7 +61,13 @@ class SingletonSession(PylinkEyetrackerSession):
 
     def run(self):
         self.create_trials()
-        self.create_experiment()
+
+        # if eyetracking then calibrate
+        if self.eyetracker_on:
+            self.calibrate_eyetracker()
+
+
+        self.start_experiment()
 
         # draw instructions wait a few seconds
         this_instruction_string = (f"Instructions"
@@ -62,8 +76,13 @@ class SingletonSession(PylinkEyetrackerSession):
                                    f"\nTry not to make eye movements to the distractor line that is rotated to the "
                                    f"{self.instructions['distractor_direction']} "
                                    f"({self.instructions['distractor_symbol']})."
-                                   f"\nPress -spacebar- to start a trial."
-                                   f"\nAnd try to be as fast and accurate as possible!"
+                                   f"\n Before each trial, press the -spacebar- to start"
+                                   f"\n Press the -spacebar- to continue.")
+        
+        draw_instructions(self.win, this_instruction_string, keys='space')
+        
+
+        this_instruction_string = (f"\nAnd try to be as fast and accurate as possible!"
                                    f"\nMove as soon as you see the target (which is also when the fixation dot in the "
                                    f"middle disappears)"
                                    f"\n\n\nPlease press the -spacebar- to continue")
@@ -178,7 +197,10 @@ class SingletonSession(PylinkEyetrackerSession):
         np.random.shuffle(trial_indices)  # Randomise trials
         trial_i = 0
 
-        a_sound = sound.Sound('A')
+        tone = sound.Sound('A')
+
+
+
 
         for rep in range(self.num_reps):
             for bg_orientation in self.bg_orientations:
@@ -243,20 +265,20 @@ class SingletonSession(PylinkEyetrackerSession):
                                                           parameters=_trial_parameters,
                                                           stimulus1=stimulus1,
                                                           stimulus2=stimulus2,
-                                                          a_sound=a_sound,
+                                                          tone=tone,
+                                                          behavioural_files=self.behavioural_files
                                                           fixation_circle=fixation_circle,
                                                           target_circle=target_circles[key],
                                                           distractor_circle=dist_circles[key],
                                                           target_circle_big=target_big_circles[key],
                                                           distractor_circle_big=dist_big_circles[key]))
 
-        self.practice_trials = deepcopy(
-            np.random.choice(self.trials, self.settings["study"][self.exp_str]["practice_trials"]))
+        self.practice_trials = np.random.choice(self.trials, self.settings["study"][self.exp_str]["practice_trials"])
         for i in range(len(self.practice_trials)):
             self.practice_trials[i].trial_num = i
             self.practice_trials[i].parameters["practice"] = True
 
-            if i == len(self.practice_trials - 1):
+            if i == len(self.practice_trials) - 1:
                 phases["end_of_block"] = 1000
 
             # TODO: Change what makes it a practice: longer time somewhere?

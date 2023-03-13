@@ -158,7 +158,7 @@ def get_grid_array(positions, ecc_range, convert2pix=True, screen=[1920, 1080],
 
 
 def draw_instructions(win, instructions, keys=['b'], visual_obj=[], image_path=[],
-                      color=(1, 1, 1), font='Helvetica Neue', pos=(0, 0), height=40,  # .65,
+                      color=(1, 1, 1), font='Helvetica Neue', pos=(0, 0), height=30,  # .65,
                       italic=True, anchorHoriz='center', anchorVert='center'):
     """ draw instructions on screen
     
