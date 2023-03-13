@@ -81,14 +81,14 @@ class SingletonTrial(Trial):
             driftCheck = False
             while not driftCheck:
                 driftCheck = self.session.tracker.doDriftCorrection()
-                self.session.win.flip()
+                # self.session.win.flip()
 
             self.session.tracker.start_recording()
             self.session.tracker.status_msg(
                 f"trial {str(self.trial_nr)}_{str(round(np.nanmean(self.session.RTs) * 1000))}_{str(np.round(np.nanmean(self.to_target_list) * 100))}")
 
             self.session.fixation.draw()
-            self.session.win.flip()
+            # self.session.win.flip()
             self.session.tracker.sendMessage("fix_display")  # Logging to EDF
 
             # logging vars to edf file
@@ -218,6 +218,7 @@ class SingletonTrial(Trial):
             if practice:
                 warning_text.draw()
                 self.session.win.flip()
+
                 # core.wait(1) TODO
         else:
             response = 'none'
