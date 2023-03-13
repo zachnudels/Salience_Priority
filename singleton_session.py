@@ -100,7 +100,7 @@ class SingletonSession(PylinkEyetrackerSession):
         draw_instructions(self.win, this_instruction_string, keys='space')
         
 
-        this_instruction_string = (f"\nAnd try to be as fast and accurate as possible!"
+        this_instruction_string = (f"\nTry to be as fast and accurate as possible!"
                                    f"\nMove as soon as you see the target (which is also when the fixation dot in the "
                                    f"middle disappears)"
                                    f"\n\n\nPlease press the -spacebar- to continue")
@@ -124,6 +124,9 @@ class SingletonSession(PylinkEyetrackerSession):
                                     f"\n\nPlease press the -spacebar- to begin.")
 
             draw_instructions(self.win, this_instruction_string, keys='space')
+
+            self.fixation.draw()
+            self.win.flip()
 
         if self.eyetracker_on:
             self.start_recording_eyetracker()
@@ -290,6 +293,9 @@ class SingletonSession(PylinkEyetrackerSession):
 
                 if i == len(self.practice_trials) - 1:
                     phases["end_of_block"] = 1000
+
+            for i in range(len(self.practice_trials[0].phase_durations)):
+                print(self.practice_trials[0].phase_names[i], self.practice_trials[0].phase_durations[i])
 
             # TODO: Change what makes it a practice: longer time somewhere?
             # practice_trial.phase_duration

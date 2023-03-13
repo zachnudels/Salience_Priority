@@ -95,7 +95,6 @@ def grid_coordinates(x_count: int, y_count: int, pixel_spacing: float):
 
 
 def construct_singleton_pairs(pixel_spacing: float, x_count, y_count):
-    print("picel_spacing", pixel_spacing)
     """
     Should return every possible combination of target, distractor pairs which are the center of each quadrant
     I.e., the center of each half diagonal

@@ -78,6 +78,7 @@ class SingletonTrial(Trial):
         # self.distractor_stim = distractor_stim
 
     def draw(self):
+        # print(self.phase)
         # for i in range(len(self.phase_names)):
         #     print(self.phase_names[i], self.phase_durations[i])
         # print('phase', self.phase_names[int(self.phase)])
@@ -97,8 +98,8 @@ class SingletonTrial(Trial):
                     driftCheck = self.session.tracker.doDriftCorrect(
                         self.session.settings["window_extra"]["size"][0] // 2,
                         self.session.settings["window_extra"]["size"][1] // 2,
-                        0,
-                        0)
+                        1,
+                        1)
                     # self.session.win.flip()
                     print("drift done")
 
@@ -209,15 +210,6 @@ class SingletonTrial(Trial):
 
         
 
-    def get_events(self):
-        """ Logs responses/triggers """
-        for ev, t in event.getKeys(
-                timeStamped=self.session.clock):  # list of of (keyname, time) relative to Clock’s last reset
-            if len(ev) > 0:
-                if ev in ['q']:
-                    print('trial cancelled by user')
-                    self.session.close()
-                    self.session.quit()
 
     def response_check(self, t0, practice: bool):
         """
