@@ -1,7 +1,7 @@
 ---
 API: 2.1
-OpenSesame: 3.3.14
-Platform: posix
+OpenSesame: 3.3.8
+Platform: nt
 ---
 set width 1920
 set uniform_coordinates yes
@@ -27,7 +27,7 @@ set font_size 18
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "/Users/zach/RA_2023"
+set experiment_path "C:/Users/crowding_search_2/Desktop/Experiment/Crowding_VS_features/Salience_Priority"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -43,7 +43,8 @@ define inline_script constants
 	___prepare__
 	debug = False
 	exp_num = 2
-	cwd = '/Users/zach/RA_2023/Salience_Priority/experiment'
+	cwd =  "C:\\Users\\crowding_search_2\\Desktop\\Experiment\\Crowding_VS_features\\Salience_Priority"
+	cwd_ = '/Users/zach/RA_2023/Salience_Priority/experiment'
 	results = []
 	to_target_list = []
 	RTs = []
@@ -222,8 +223,10 @@ define inline_script singleton_session
 	
 	                # TODO: Fixation point
 	        line_size_pix = deg2pix(self.settings["stimuli"]["fix_line_size_deg"], win.monitor)
+	        print("LINE SIZE", line_size_pix)
 	        
 	        line_width_pix = deg2pix(self.settings["stimuli"]["fix_line_width_deg"], win.monitor)
+	        print("LINE WIDTH", line_width_pix)
 	        
 	        self.fixation = visual.ShapeStim(win,
 	                                         vertices=((0, -line_size_pix / 2), (0, line_size_pix / 2),
@@ -371,7 +374,7 @@ define inline_script singleton_session
 	        print("TRIALS PER BLOCK", trials_per_block)
 	        
 	        trial_indices = np.arange(num_trials)
-	        # np.random.shuffle(trial_indices)  # Randomise trials
+	        np.random.shuffle(trial_indices)  # Randomise trials
 	        trial_i = 0
 	
 	        tone = sound.Sound('A')
@@ -429,7 +432,7 @@ define inline_script singleton_session
 	                            "ITI": self.settings["trial_info"]["ITI"] + np.random.uniform(-0.1, 0.1),
 	                        }
 	
-	                        if trial_num % trials_per_block == 0:
+	                        if (trial_num + 1) % trials_per_block == 0:
 	                            phases["end_of_block"] = 1000
 	                            
 	                        self.trials.append(SingletonTrial(trial_nr=trial_num,
@@ -450,15 +453,24 @@ define inline_script singleton_session
 	        # if not self.debug:
 	        # TODO Check how to construct practice trials
 	        
-	        self.practice_trials = np.random.choice(self.trials[:trials_per_block], # Ensures no end_of_block trials
+	        self.trials = sorted(self.trials, key=lambda trial: trial.trial_nr)
+	        
+	        # for trial in self.trials:
+	        #     print(trial.trial_nr, trial.SOA, "end of block?", "end_of_block" in trial.phases.keys())
+	        
+	        self.practice_trials = np.random.choice([trial for trial in self.trials if "end of block" not in trial.phases.keys()], # Ensures no end_of_block trials
 	                                                self.settings["study"][self.exp_str]["practice_trials"])
 	        print(len(self.practice_trials))
 	        for i in range(len(self.practice_trials)):
-	            self.practice_trials[i].trial_num = i
+	            self.practice_trials[i].trial_nr = i
 	            self.practice_trials[i].parameters["practice"] = True
 	
 	            if i == len(self.practice_trials) - 1:
-	                phases["end_of_block"] = 1000
+	                self.practice_trials[i].phases["end_of_block"] = 1000
+	                
+	        # for trial in self.practice_trials:
+	        #     print(trial.trial_nr, trial.SOA, "end of block?", "end_of_block" in trial.phases.keys())
+	        
 	
 	        # for i in range(len(self.practice_trials[0].phase_durations)):
 	        #     print(self.practice_trials[0].phase_names[i], self.practice_trials[0].phase_durations[i])
@@ -564,6 +576,8 @@ define inline_script singleton_trial
 	        if self.practice and self.trial_nr == self.parameters["practice_trials"]:
 	            self.end_of_practise()
 	            
+	        eyetracker.stop_recording()
+	            
 	        driftCheck = False
 	        if not self.debug:
 	            driftCheck = False 
@@ -630,9 +644,9 @@ define inline_script singleton_trial
 	            if RT > 2: 
 	                break
 	            
-	            key = event.getKeys(keyList = ['s'])
+	            key = event.getKeys(keyList = ['q'])
 	            if len(key)> 0: 
-	                if key[0] =='s': 
+	                if key[0] =='q': 
 	                    eyetracker.stop_recording()
 	                    win.close()
 	                    

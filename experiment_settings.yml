@@ -55,11 +55,11 @@ stimuli:
   num_singletons: 2
   bg_orientation: [10]
   singleton_orientation: [30, -30]
-  x_count: 29
-  y_count: 17
+  x_count: 20
+  y_count: 12
   spacing: 0.9
-  line_length: 0.4  # 19 * 2
-  line_width: 0.06  # 3 * 2
+  line_length: 0.9  # 19 * 2
+  line_width: 0.2  # 3 * 2
   line_color: "#AAAAAA"
   jitter: 0
   fix_dot_size_deg: 0.05
