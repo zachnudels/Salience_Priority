@@ -58,8 +58,8 @@ define sequence experiment
 	run new_pygaze_init always
 	run constants always
 	run utils always
-	run singleton_trial always
 	run singleton_session always
+	run singleton_trial always
 	run main always
 
 define inline_script main
@@ -140,7 +140,7 @@ define inline_script main
 	set _prepare ""
 
 define pygaze_init new_pygaze_init
-	set tracker_type "Advanced dummy (mouse simulation)"
+	set tracker_type EyeLink
 	set tobiiglasses_udpport 49152
 	set tobiiglasses_address "192.168.71.50"
 	set smi_send_port 4444
@@ -316,7 +316,7 @@ define inline_script singleton_session
 	        # # init variables for feedback
 	        #
 	        # check if they moved their eyes before targets are shown
-	        fixation_circle = visual.Circle(win, radius=50, pos=(0, 0))
+	        fixation_circle = visual.Circle(win, radius=5, pos=(0, 0), units='deg')
 	
 	        # Save memory - don't construct for each rep
 	        possible_grids = dict()
@@ -546,6 +546,7 @@ define inline_script singleton_trial
 	        self.target_circle_big = target_circle_big
 	        self.distractor_circle = distractor_circle
 	        self.distractor_circle_big = distractor_circle_big
+	        self.fixation_circle = fixation_circle
 	
 	        # Delete tuples from parameters since they cannot be logged
 	        del parameters["target_pos"]
@@ -676,8 +677,8 @@ define inline_script singleton_trial
 	        
 	    def end_of_block(self):
 	        print(self.trial_nr)
-	        print("RT LEN", len(RTs))
-	        avg_RT = np.round(np.nanmean(RTs) * 1000)
+	        # print("RT LEN", len(RTs))
+	        avg_RT = 0 #np.round(np.nanmean(RTs) * 1000)
 	        this_instruction_string = (f"This was block {self.block_num}"
 	                               f"\n\n Your average response time was {avg_RT} ms."
 	                               f"\n Well done! "
@@ -689,13 +690,10 @@ define inline_script singleton_trial
 	
 	        text1.draw()
 	        win.flip()
-	        RTs = []
+	        # RTs = []
 	        self.save_results()
 	        
-	        key = event.getKeys(keyList = ['space'])
-	        if len(key)> 0: 
-	            if key[0] =='space': 
-	                return
+	
 	    
 	
 	    
@@ -704,11 +702,19 @@ define inline_script singleton_trial
 	        
 	        self.initialization()
 	        
-	        core.wait(self.phases["initialization"])
+	        # core.wait(self.phases["initialization"])
+	        for ms in clock.loop_for(self.phases["initialization"]):
+	            self.fix_check()
 	        
 	        self.draw_stim1()
 	        
-	        core.wait(self.phases["stimulus1"])
+	        
+	        for ms in clock.loop_for(self.phases["stimulus1"]):
+	            if self.parameters["stimulus2_log"] == "target_display":
+	                self.fix_check()
+	            else:
+	                pass
+	        
 	        
 	        self.draw_stim2()
 	        
@@ -725,7 +731,11 @@ define inline_script singleton_trial
 	        
 	        if "end_of_block" in self.phases.keys():
 	            self.end_of_block()
-	            core.wait(self.phases["end_of_block"])
+	            # for ms in clock.loop_for(self.phases["end_of_block"]):
+	            key = event.waitKeys(keyList = ['space', 'q', 'esc'])
+	            if len(key)> 0: 
+	                return
+	                    
 	        
 	        
 	        # print(self.phase)
@@ -761,11 +771,7 @@ define inline_script singleton_trial
 	
 	    def response_check(self, t0, practice):
 	        warning_text = visual.TextStim(win, text = 'Wrong line!')
-	        
-	        curPos = eyetracker.sample()	
-	        x_sample = curPos[0] - self.parameters["window_size"][0]/2
-	        y_sample = (curPos[1] - (self.parameters["window_size"][1]/2))*-1
-	        curPos = (x_sample,y_sample)
+	        curPos = get_curr_sample(self.parameters["window_size"])
 	        t1 = core.getTime()
 	        RT = t1 -t0
 	        
@@ -784,6 +790,25 @@ define inline_script singleton_trial
 	        else: 
 	            response = 'none'
 	        return response, RT
+	    
+	    def fix_check(self):
+	        warning_text = visual.TextStim(win, text = 'Keep fixating until targets appear!')
+	        curPos = get_curr_sample(self.parameters["window_size"])
+	        print("FIX CHECK CUR POS", curPos)
+	        print("FIX CIRCLE", self.fixation_circle.pos)
+	        if not self.fixation_circle.contains(curPos):
+	            print("NOT AT FIX")
+	            eyetracker.log("incorrect_starting_pos")
+	            core.wait(0.25)
+	            self.fixation_circle.draw()
+	            warning_text.draw()
+	            win.flip()
+	            core.wait(1)
+	        
+	
+	        
+	        
+	        
 	    
 	    # def response_check(self, t0, practice: bool):
 	    #     """
@@ -1153,5 +1178,11 @@ define inline_script utils
 	    key_pressed = event.waitKeys(keyList=keys)
 	
 	    return key_pressed
+	
+	def get_curr_sample(screen_dims):
+	    curPos = eyetracker.sample()	
+	    x_sample = curPos[0] - screen_dims[0]/2
+	    y_sample = -(curPos[1] - (screen_dims[1]/2))
+	    return (x_sample, y_sample)
 	__end__
 
