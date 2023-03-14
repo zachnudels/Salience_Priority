@@ -6,10 +6,10 @@ preferences:
 study:
   no_exps: 2
   exp2:
-    SOAs: [-100, -0, 100]
-    num_reps: 1
-    num_blocks: 3
-    practice_trials: 3
+    SOAs: [-100, -30, 0, 30, 100] #, -0, 100]
+    num_reps: 10
+    num_blocks: 1
+    practice_trials: 10
 
 window: # refers to the parameters for the Psychopy Window class
   units: pix
@@ -53,10 +53,10 @@ eyetracker:
 
 stimuli:
   num_singletons: 2
-  bg_orientation: [10]
+  bg_orientation: [10, -10]
   singleton_orientation: [30, -30]
-  x_count: 20
-  y_count: 12
+  x_count: 15
+  y_count: 15
   spacing: 0.9
   line_length: 0.9  # 19 * 2
   line_width: 0.2  # 3 * 2
@@ -69,9 +69,9 @@ stimuli:
   fix_check_rad: 2
 
 trial_info:
-  break_trial_num: 3
-  initialization_time: 0.2
-  ITI: 0.5
-  max_response_time: 2
+  break_trial_num: 50
+  initialization_time: 200
+  ITI: 500
+  max_response_time: 1000
 
 
