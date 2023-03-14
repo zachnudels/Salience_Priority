@@ -8,8 +8,8 @@ study:
   exp2:
     SOAs: [-100, -0, 100]
     num_reps: 1
-    num_blocks: 1
-    practice_trials: 1
+    num_blocks: 3
+    practice_trials: 3
 
 window: # refers to the parameters for the Psychopy Window class
   units: pix
@@ -70,8 +70,8 @@ stimuli:
 
 trial_info:
   break_trial_num: 3
-  initialization_time: 2
+  initialization_time: 0.2
   ITI: 0.5
-  max_response_time: 5
+  max_response_time: 2
 
 
