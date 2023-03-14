@@ -6,10 +6,10 @@ preferences:
 study:
   no_exps: 2
   exp2:
-    SOAs: [-100, -30, 0, 30, 100] #, -0, 100]
-    num_reps: 10
-    num_blocks: 1
-    practice_trials: 10
+    SOAs: [-30, 30] #, -0, 100]
+    num_reps: 1
+    num_blocks: 4
+    practice_trials: 20
 
 window: # refers to the parameters for the Psychopy Window class
   units: pix

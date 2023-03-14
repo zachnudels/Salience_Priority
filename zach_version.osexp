@@ -27,7 +27,7 @@ set font_size 18
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "C:/Users/crowding_search_2/Desktop/Experiment/Crowding_VS_features/Salience_Priority"
+set experiment_path "C:/Users/RA-Eyelink/Salience_Priority"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -43,7 +43,7 @@ define inline_script constants
 	___prepare__
 	debug = False
 	exp_num = 2
-	cwd =  "C:\\Users\\crowding_search_2\\Desktop\\Experiment\\Crowding_VS_features\\Salience_Priority"
+	cwd =  "C:\\Users\\RA-Eyelink\\Salience_Priority"
 	cwd_ = '/Users/zach/RA_2023/Salience_Priority/experiment'
 	results = []
 	to_target_list = []
@@ -632,9 +632,10 @@ define inline_script singleton_trial
 	    def draw_stim1(self):
 	        self.stimulus1.draw()
 	            # print("Draw stim1")
-	        eyetracker.log(self.parameters["stimulus1_log"])
+	        
 	        self.t0 = core.getTime() 
 	        win.flip()# TODO: Check if t0 needs to be accurate (target displayed rather than either)
+	        eyetracker.log(self.parameters["stimulus1_log"])
 	
 	    
 	    def draw_stim2(self):
@@ -643,35 +644,25 @@ define inline_script singleton_trial
 	        win.flip()
 	        
 	        eyetracker.log(self.parameters["stimulus2_log"])
-	        self.endtime, self.startpos, self.endpos = eyetracker.wait_for_saccade_end()
+	        self.endtime, self.startpos, self.endpos = wait_for_saccade_end_timeout(self.phases["stimulus2"])
+	 
+	        response, RT, self.success = self.response_check()
+	        
+	        if response is not None:
+	            # print("RESPONSE CAPTURED", response)
+	            if response == 'distractor':
+	                return False
+	            RTs.append(RT)
+	        else:
+	            return False
 	
-	        response = None
-	        while response is None: 
-	            response, RT = self.response_check()
-	            
-	            if response is not None:
-	                print("RESPONSE CAPTURED", response)
-	                if response == 'distractor':
-	                    return False
-	                RTs.append(RT)
-	                break
-	            
-	            # check how long we've been waiting for a response
-	            if RT > self.phases["stimulus2"]: 
-	                break
-	            
-	            key = event.getKeys(keyList = ['q'])
-	            if len(key)> 0: 
-	                if key[0] =='q': 
-	                    eyetracker.stop_recording()
-	                    win.close()
 	        
 	        return True
 	                    
 	    def ITI(self):
 	        self.draw_fixation((0,0),10)
 	        win.flip()
-	        self.success = self.check_saccade(self.endpos)
+	        # self.success = self.check_saccade(self.endpos)
 	        eyetracker.log('TRIAL_VAR end_position ' + str(self.endpos))
 	        eyetracker.log('TRIAL_VAR succes ' + str(self.success))
 	
@@ -735,7 +726,7 @@ define inline_script singleton_trial
 	        # print("STIM 1 DRAWN")
 	        
 	        
-	        for ms in clock.loop_for(self.phases["stimulus1"], throttle=100):
+	        for ms in clock.loop_for(self.phases["stimulus1"]):
 	            # print("MS", ms)
 	            if self.parameters["stimulus2_log"] == "target_display":
 	                if not self.fix_check():
@@ -811,9 +802,11 @@ define inline_script singleton_trial
 	        if distance(cur_pos, self.target_pos, True, win) < self.parameters["max_dist"]:
 	            response = 'target'
 	            to_target_list.append(1)
+	            success = True
 	        elif distance(cur_pos, self.distractor_pos, True, win) < self.parameters["max_dist"]:
 	            response = 'distractor'
 	            to_target_list.append(0)
+	            success = True
 	            # print("DIST COORD", self.distractor_pos)
 	            # print("TARGET COORD", self.target_pos)
 	            # print("CUR_POS", cur_pos)
@@ -823,10 +816,15 @@ define inline_script singleton_trial
 	                warning_text.draw()
 	                win.flip()
 	                core.wait(1)
-	        else: 
+	        else:
+	            success = False
+	            warning_text = visual.TextStim(win, text='Make one eye movement to the target!')
+	            warning_text.draw()
+	            win.flip()
+	            core.wait(1)
 	            response = None
 	            
-	        return response, RT
+	        return response, RT, success
 	    
 	    def fix_check(self):
 	        warning_text = visual.TextStim(win, text = 'Keep fixating until targets appear!')
@@ -950,6 +948,7 @@ define inline_script utils
 	import random
 	import pandas as pd
 	import yaml
+	import pylink
 	
 	from psychopy import visual, tools, colors, event
 	import psychopy.tools.colorspacetools as ct
@@ -960,6 +959,18 @@ define inline_script utils
 	import time
 	import colorsys
 	
+	
+	def wait_for_saccade_end_timeout(timeout=None):
+	    """endtime, startpos, endpos"""
+	    t0 = clock.time()
+	    for ms in clock.loop_for(timeout):
+	        d = pylink.getEYELINK().getNextData()
+	        if d == pylink.ENDSACC:
+	            float_data  = pylink.getEYELINK().getFloatData()
+	            tc = float_data.getTime() - eyetracker._get_eyelink_clock_async()
+	            if tc > t0:
+	                break
+	    return tc, float_data.getStartGaze(), float_data.getEndGaze()
 	
 	# TODO: This should return two sizes, one for vert, one for hori
 	def dva_per_pix(height_cm=30, distance_cm=70, vert_res_pix=1080):
