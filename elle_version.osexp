@@ -1,0 +1,609 @@
+---
+API: 2.1
+OpenSesame: 3.3.14
+Platform: posix
+---
+set width 1920
+set uniform_coordinates yes
+set title "New experiment"
+set subject_parity even
+set subject_nr 0
+set start experiment
+set sound_sample_size -16
+set sound_freq 48000
+set sound_channels 2
+set sound_buf_size 1024
+set sampler_backend legacy
+set round_decimals 2
+set psychopy_monitor testMonitor
+set mouse_backend psycho
+set keyboard_backend psycho
+set height 1080
+set fullscreen no
+set form_clicks no
+set foreground white
+set font_underline no
+set font_size 18
+set font_italic no
+set font_family mono
+set font_bold no
+set experiment_path "/Users/zach/RA_2023"
+set disable_garbage_collection yes
+set description "The main experiment item"
+set coordinates uniform
+set compensation 0
+set color_backend psycho
+set clock_backend psycho
+set canvas_backend psycho
+set background black
+
+define sequence experiment
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run new_pygaze_init always
+	run imports always
+	run functions always
+	run variables always
+	run general_instructions always
+	run start_practice always
+	run experiment_code always
+
+define inline_script experiment_code
+	set description "Executes Python code"
+	___run__
+	
+	from openexp.synth import synth
+	my_synth = synth(self.experiment, osc = "sine", freq = 500, attack = 0, length = 100)
+	# this is for dummy mode, comment if you are actually testing! 
+	my_mouse = mouse()
+	my_mouse.show_cursor(show = True)
+	
+	for trial in range(nTrials): 
+	    
+	    # get vars 
+	    targetPos = trialInfo[trial]['targetPos']
+	    distPos = trialInfo[trial]['distPos']
+	    SOA = trialInfo[trial]['SOA']
+	    backgroundO = trialInfo[trial]['backOri']
+	    
+	    #update practise var 
+	    if trial > nPractiseTrials: 
+	        practise = False 
+	    else: 
+	        practise = True 
+	    
+	    
+	    # target salient or  not 
+	    if abs(targetO - backgroundO)> abs(distO -  backgroundO):
+		    target_salience = "high" 
+	    else:
+		    target_salience = "low" 
+	        
+	    # check to see if it's time for a break 
+	    if trial%breakTrial ==0 and trial >0 : 
+	        block = trial/breakTrial
+	        avg_RT = np.round(np.nanmean(avg_time)*1000)
+	        give_feedback(block, avg_RT)
+	        avg_time = []
+	        to_target_list = []    
+	        
+	    if trial == nPractiseTrials: 
+	        end_of_practise()    
+	
+	    driftCheck = False 
+	    while not driftCheck: 	
+	        driftCheck = eyetracker.drift_correction()
+	        win.flip()
+	    eyetracker.start_recording()
+	    # eyetracker.status_msg('trial: ' + str(trial) +'_'+ str(round(np.nanmean(avg_time)*1000)) + '_' + str(np.round(np.nanmean(to_target_list)*100)))
+	    
+	
+	    draw_fixation((0,0),10)
+	    win.flip()
+	    eyetracker.log("fix_display")
+	    core.wait(0.2)
+	
+	
+	    targetCo = coordinates[0][targetPos]
+	    distCo = coordinates[0][distPos]
+	    
+	    target_circle.pos = targetCo
+	    dist_circle.pos = distCo
+	    
+	    target_circle_big.pos = targetCo
+	    dist_circle_big.pos = distCo
+	    
+	    # logging vars to edf file 
+	    eyetracker.log('start_trial')
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR trial_nr ' + str(trial))
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR target_pos ' + str(targetPos))
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR dist_pos ' + str(distPos))
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR target_co_x ' + str(targetCo[0]))
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR target_co_y ' + str(targetCo[1]))
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR distractor_co_x ' + str(distCo[0]))
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR distractor_co_y ' + str(distCo[1]))
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR background_orientation ' + str(backgroundO))
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR ISI ' + str(SOA))
+	    exp.sleep(2)
+	    eyetracker.log('TRIAL_VAR practice ' + str(practise))
+	    exp.sleep(2)
+	    eyetracker.log("TRIAL_VAR target_salience %s" % target_salience)
+	    exp.sleep(2)
+	    
+	    if SOA < 0: 
+	        
+	        # fix_check()
+	        show_searchdisplay(True, True, targetO, distO, targetCo, distCo, backgroundO)
+	        eyetracker.log('target_display')
+	        t0 = core.getTime()
+	        
+	        # wait SOA time 
+	        core.wait((abs(SOA)-5)*0.001)
+	        
+	        
+	        show_searchdisplay(True, True, targetO, distO, targetCo, distCo, backgroundO)
+	        eyetracker.log('stimuli_show')
+	        endtime, startpos, endpos = eyetracker.wait_for_saccade_end() # technially you could make an eye movement before this, but that would have to be a saccade initiated quicker than 100 ms, which will probably not happen a lot (considering I also check they are fixating)
+	       
+	    
+	    elif SOA ==0: 
+	        eyetracker.log('pre_display')
+	        show_searchdisplay(True, True,targetO, distO, targetCo, distCo, backgroundO)
+	        eyetracker.log("target_display")
+	        exp.sleep(2)
+	        eyetracker.log("stimuli_show")
+	        t0 = core.getTime()
+	        endtime, startpos, endpos = eyetracker.wait_for_saccade_end()
+	        
+	    elif SOA > 0: 
+	        
+	        show_searchdisplay(True, False, targetO, distO, targetCo, distCo, backgroundO)
+	        eyetracker.log('stimuli_show')
+	        
+	        # wait SOA time 
+	        core.wait((SOA-5)*0.001)
+	        
+	        # fix_check()
+	        show_searchdisplay(True, True, targetO, distO, targetCo, distCo, backgroundO)
+	        eyetracker.log('target_display')
+	        t0 = core.getTime()
+	        endtime, startpos, endpos = eyetracker.wait_for_saccade_end()
+	    
+	   
+	    response = 'none'
+	    while response == 'none': 
+	        response, RT = response_check(t0)
+	        
+	        # check how long we've been waiting for a response
+	        if RT > 2: 
+	            break
+	        
+	        key = event.getKeys(keyList = ['s'])
+	        if len(key)> 0: 
+	            if key[0] =='s': 
+	                eyetracker.stop_recording()
+	                win.close()
+	        
+	    avg_time.append(RT)    
+	    core.wait(0.15) #just wait a little bit before removing the screen otherwise it feels very rushed
+	    draw_fixation((0,0),10)
+	    win.flip()
+	    eyetracker.log("fix_display2")
+	    
+	    # now check if the eye movement was made correctly 
+	    succes = check_saccade(endpos)
+	    eyetracker.log('TRIAL_VAR end_position ' + str(endpos))
+	    eyetracker.log('TRIAL_VAR succes ' + str(succes))
+	    
+	    core.wait(0.5)
+	    
+	    
+	    eyetracker.log('stop_trial')
+	    eyetracker.stop_recording()
+	    results[trial,:] = [pp, trial,targetO,distO,backgroundO,targetPos,distPos, SOA, succes, endpos, target_salience, RT]
+	    save_results() 
+	     
+	# saving the results matrix 
+	save_results()    
+	    
+	__end__
+	set _prepare ""
+
+define inline_script functions
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	def show_searchdisplay(show_grid , show_target , targetOri, distOri, targetLoc, distLoc, backgroundOri):		
+		
+	  # for some reason they don't want to update outside the function.. 	 
+	   rect1 = visual.Rect(win, width =50, height = 50, units = 'pix', lineColor = 'black', fillColor = 'black', pos = targetLoc)
+	   rect2 = visual.Rect(win, width =50, height = 50, units = 'pix',  lineColor = 'black', fillColor = 'black', pos = distLoc)
+	
+	   if show_grid: 
+	     
+	     grid.oris = backgroundOri 
+	     grid.draw()
+	     rect1.draw()
+	     rect2.draw() 
+	
+		# show the target 
+	   if show_target: 
+	       pass
+			# update the target for this trial
+	#         target_stim.oris = targetOri
+	#         target_stim.xys = [targetLoc]
+	#         target_stim.draw()
+	# 		# show the distractor 
+	#         dist_stim.oris = distOri 
+	#         dist_stim.xys = [distLoc]
+			
+			
+	#         dist_stim.draw()
+		
+		
+		
+	   win.flip()
+	
+	
+	def makeGrid(x,y,x_count,y_count,line_length=50,spacing=10,jitter=0):
+		x_step = line_length+spacing
+		y_step = line_length+spacing
+		x_start = x-(x_count*x_step*0.5-spacing)
+		y_start = y-(y_count*y_step*0.5-spacing)
+	 
+	
+		grid_position = []	
+		for n in range(0,y_count):
+			for n2 in range(0,x_count):
+				x_co = x_step*n2+x_start          #+random.randint(-1*jitter,jitter)
+				y_co = y_step*n+y_start           #+random.randint(-1*jitter,jitter) 
+				co = (x_co, y_co)
+				grid_position.append(co)
+		return grid_position
+	
+	
+	    
+	def fix_check(): 
+	    warning_text = visual.TextStim(win, text = 'Keep your eyes at fixation untill targets appear!')
+	    curPos = eyetracker.sample()
+	    x_sample = curPos[0] - hRes/2
+	    y_sample = (curPos[1] - (vRes/2))*-1
+	    curPos = (x_sample,y_sample)    
+	    if not fixation_circle.contains(curPos): 
+	        eyetracker.log("incorrect_starting_pos")
+	        core.wait(0.25)
+	        warning_text.draw()
+	        win.flip()
+	        core.wait(1)
+	        
+	def response_check(t0):
+	    warning_text = visual.TextStim(win, text = 'Wrong line!')
+	    
+	    curPos = eyetracker.sample()	
+	    x_sample = curPos[0] - hRes/2
+	    y_sample = (curPos[1] - (vRes/2))*-1
+	    curPos = (x_sample,y_sample)
+	    t1 = core.getTime()
+	    RT = t1 -t0
+	    
+	    if target_circle.contains(curPos): 
+	        response = 'target'
+	        to_target_list.append(1)
+	    elif dist_circle.contains(curPos): 
+	        response = 'distractor'
+	        to_target_list.append(0)
+	        my_synth.play()
+	        if practise: 
+	            warning_text.draw()
+	            win.flip()
+	            core.wait(1)
+	        
+	    else: 
+	        response = 'none'
+	    return response, RT
+	    
+	def draw_fixation(pos,lineSize,draw_cross = True, color = 'white'  ): 
+		
+	 t = lineSize/2.0
+	 vertical_line = visual.Line(win,start = (pos[0],pos[1]-t),end = (pos[0],pos[1]+t),lineColor = color)
+	 horizontal_line = visual.Line(win,start = (pos[0]-t,pos[1]),end = (pos[0]+t,pos[1]),lineColor = color)
+	 
+	 if draw_cross: 
+	  vertical_line.draw()
+	  horizontal_line.draw()     
+	
+	def dva_per_pix(height_cm=30, distance_cm=70, vert_res_pix=1080):
+	    """ calculate degrees of visual angle per pixel,
+	    to use for screen boundaries when plotting/masking
+	    Parameters
+	    ----------
+	    height_cm : int
+	        screen height
+	    distance_cm: float
+	        screen distance (same unit as height)
+	    vert_res_pix : int
+	        vertical resolution of screen
+	    
+	    Outputs
+	    -------
+	    deg_per_px : float
+	        degree (dva) per pixel
+	    
+	    """
+	
+	    # screen size in degrees / vertical resolution
+	    deg_per_px = (2.0 * np.degrees(np.arctan(height_cm / (2.0 * distance_cm)))) / vert_res_pix
+	
+	    return deg_per_px
+	
+	def save_results(): 
+	
+	   # change this based on folder name! 
+	   filename = 'C:/Users/EccSalRel/Data/behavioral_data_mieke' + str(pp)	+ '.pickle'
+	   with open(filename, 'wb') as handle: 
+	     pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	   filename = '//labssrv/Labs/EccSalRel/Data/behavioral_data_mieke' + str(pp) + '.pickle'
+	   with open(filename, 'wb') as handle: 
+	     pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+	   print('Saved the pickle file!')
+	
+	
+	def give_feedback(block, avg_RT):
+	    
+	    text1 = visual.TextStim(win, text = 'This was block ' + str(block), pos = (0,200))
+	    text2 = visual.TextStim(win, text = 'Your average response time was ' + str(avg_RT) + ' ms', pos = (0,-0))
+	    text3 = visual.TextStim(win, text = 'Press c to continue', pos = (0,-200))
+	    
+	    text1.draw()
+	    text2.draw()
+	    text3.draw()
+	    win.flip()
+	    
+	    event.waitKeys(keyList = ['c'])
+	    core.wait(0.5)
+	    
+	def check_saccade(endpos): 
+	    
+	    x_sample = endpos[0] - hRes/2
+	    y_sample = (endpos[1] - (vRes/2))*-1
+	    curPos = (x_sample,y_sample)
+	    
+	    if target_circle_big.contains(curPos) | dist_circle_big.contains(curPos): 
+	        succes = True 
+	    else:
+	        succes = False 
+	        
+	    if not succes: 
+	        warning_text = visual.TextStim(win, text = 'Make one eye movement to the target!')
+	        warning_text.draw()
+	        win.flip()
+	    return succes
+	        
+	def end_of_practise():
+	    
+	    text1 = visual.TextStim(win, text = 'This is the end of the practise block', pos = (0,200))
+	    text2 = visual.TextStim(win, text = 'From now on you will only hear a beep if you select the distractor (no longer the text Wrong Line!)', pos = (0,-0))
+	    text3 = visual.TextStim(win, text = 'Press c to continue', pos = (0,-200))
+	    
+	    text1.draw()
+	    text2.draw()
+	    text3.draw()
+	    win.flip()
+	    
+	    event.waitKeys(keyList = ['c'])
+	    core.wait(0.5)      
+	            
+	__end__
+
+define sketchpad general_instructions
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="The Instructions" x=0 y=-84 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="The task is to move your eyes to a line that is rotated to the [target] ('[target_symbol]'). <br />" x=0 y=0 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text=" Try not to make eye movements to the distractor line that is rotated to the [dist] ('[dist_symbol]')." x=0 y=32 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Press -spacebar- to start a trial." x=0 y=116 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="And try to be as fast and accurate as possible!" x=0 y=158 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Move as soon as you see the target (which is also when the fixation dot in the middle disappears) " x=0 y=68 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Press any key to continue" x=0 y=230 z_index=-1
+
+define inline_script imports
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	from psychopy import visual, core, event
+	from psychopy.tools.monitorunittools import deg2pix
+	import random
+	import numpy as np
+	__end__
+
+define pygaze_init new_pygaze_init
+	set tracker_type "Advanced dummy (mouse simulation)"
+	set tobiiglasses_udpport 49152
+	set tobiiglasses_address "192.168.71.50"
+	set smi_send_port 4444
+	set smi_recv_port 5555
+	set smi_ip "127.0.0.1"
+	set sacc_vel_thr 35
+	set sacc_acc_thr 9500
+	set eyelink_pupil_size_mode area
+	set eyelink_force_drift_correct yes
+	set description "Initialize and calibrate eye tracker"
+	set calibrate yes
+	set calbeep no
+	set alea_api_key "Contact Alea for an API key"
+	set alea_animated_calibration no
+	set _logfile automatic
+
+define sketchpad start_practice
+	set start_response_interval no
+	set duration keypress
+	set description "A sketchpad containing the instructions for the participant"
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="You will get a warning if you select the distractor instead of the target" x=0 y=0 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="Press any key to begin." x=0 y=192 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="You will now start with a practice session." x=0 y=-64 z_index=0
+	draw textline center=1 color=white font_bold=no font_family=mono font_italic=no font_size=18 html=yes show_if=always text="You will also get a warning if you make more than one eye movement to reach the target" x=0 y=96 z_index=0
+
+define inline_script variables
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	############
+	pp = self.get('subject_nr')
+	
+	
+	if pp %2 ==0: 
+	    target = 'right'
+	    dist = 'left'
+	    targetO = 30
+	    distO = -30
+	    target_symbol = ' / '
+	    dist_symbol = " \ "
+	else: 
+	    target = 'left'
+	    dist = 'right'
+	    distO = 30
+	    targetO = -30
+	    target_symbol = " \ " 
+	    dist_symbol = " / " 
+	    
+	# set them so that OS knows as well 
+	exp.set('target', target)
+	exp.set('dist', dist)
+	exp.set('target_symbol',target_symbol)
+	exp.set('dist_symbol', dist_symbol)
+	    
+	hRes = 1920 
+	vRes = 1080
+	nPractiseTrials = 50
+	breakTrial = 50
+	
+	# init these as empty lists 
+	avg_time = []
+	to_target_list = []
+	############################
+	# search display variables #
+	###########################
+	x_count = 29
+	y_count = 17#25
+	spacing = 0.5 #20
+	lineLength = 0.6 #19*2
+	lineWidth = 0.1 #3*2
+	linecolor = "#AAAAAA"
+	jitter = 0
+	
+	
+	############ ######
+	# create trial list 
+	# #################
+	backOris = [-10,10]
+	SOAs = [-100, -30, 0, 30, 100]
+	nReps = 65
+	trialInfo = []
+	for rep in range(nReps): 
+	    for backOri in backOris:
+	      for SOA in SOAs: 
+	          locs = np.arange(0,4)
+	          random.shuffle(locs)
+	          targetPos = 0 #locs[0]
+	          distPos = 2 #locs[1]
+	          trialInfo.append({'backOri': backOri, 'SOA': SOA, 'targetPos': targetPos, 'distPos': distPos}) 
+	    
+	random.shuffle(trialInfo)
+	
+	
+	nTrials = len(trialInfo)
+	results = np.matrix(np.zeros([nTrials,12]),dtype = object)
+	
+	
+	######################################
+	# init variables for search display #
+	# ####################################
+	
+	#positions = makeGrid(0,0,xCount,yCount,lineLength,spacing,jitter)
+	
+	
+	
+	half_x = x_count // 2
+	half_y = y_count // 2
+	pixel_l = deg2pix(lineLength, win.monitor)#int((1 / dva_per_pix()) * lineLength)
+	
+	pixel_w = deg2pix(lineWidth, win.monitor)
+	pixel_spacing = deg2pix(spacing, win.monitor) + np.max([pixel_l, pixel_w])
+	
+	x_range = np.arange(-(pixel_spacing)*(half_x), (pixel_spacing)*(1 + half_x), pixel_spacing, dtype=np.int32)
+	y_range =  np.arange(-(pixel_spacing)*(half_y), (pixel_spacing)*(1 + half_y), pixel_spacing, dtype=np.int32)
+	X, Y = np.meshgrid(x_range, y_range)
+	positions = list(zip(X.ravel(), Y.ravel()))
+	
+	print("monitor dist", win.monitor.getDistance())
+	
+	
+	
+	
+	# now figure out which possible x and y values are part of this 
+	
+	col = 4
+	coordinates = []
+	x = [col*pixel_spacing,-col*pixel_spacing,col*pixel_spacing,-col*pixel_spacing]
+	y = [col*pixel_spacing,-col*pixel_spacing,-col*pixel_spacing,col*pixel_spacing]
+	coordinates.append(list(zip(x,y)))
+	
+	
+	
+	# x_count = 29
+	# y_count = 17#25
+	# spacing = 40 #20
+	# m_factor = 1#1.75  # how many times does spacing have to be multiplied for the y distance 
+	# lineLength = 19*2
+	# lineWidth = 3*2
+	# linecolor = "#AAAAAA"
+	# jitter = 0
+	
+	# half_x = x_count // 2
+	# half_y = y_count // 2
+	# x_range = np.arange(-spacing*half_x, spacing*half_x + spacing, spacing, dtype=np.int32)
+	# y_range =  np.arange(-spacing*half_y, spacing*half_y + spacing, spacing*m_factor, dtype=np.int32)
+	# X, Y = np.meshgrid(x_range, y_range)
+	# positions = list(zip(X.ravel(), Y.ravel()))
+	
+	
+	# col = 4
+	# coordinates = []
+	# x = [col*spacing,-col*spacing,col*spacing,-col*spacing]
+	# y = [col*spacing*m_factor,-col*spacing*m_factor,-col*spacing*m_factor,col*spacing*m_factor]
+	# coordinates.append(list(zip(x,y)))
+	
+	
+	# make this function here once at the start 
+	grid_coords = [coordinate for coordinate in positions if coordinate != coordinates[0][0] and coordinate != coordinates[0][2]]
+	grid = visual.ElementArrayStim(win, nElements = len(grid_coords), xys = grid_coords, oris = 0, units = 'pix',autoLog=False, sizes = ( pixel_w, pixel_l), elementMask = None, elementTex = None , interpolate = False )
+	
+	# init them in the center, we change that later 
+	target_stim = visual.ElementArrayStim(win, nElements=1,xys = [(0,0)], oris = 0, units = 'pix',autoLog=False, sizes = (pixel_w, pixel_l ), elementMask = None, elementTex = None )
+		
+	dist_stim= visual.ElementArrayStim(win, nElements=1,xys = [(0,0)], oris = 0, units = 'pix',autoLog=False, sizes = ( pixel_w,pixel_l), elementMask = None, elementTex = None)	
+	
+	
+	######################## 
+	# # init variables for feedback 
+	# 
+	# check if they moved their eyes before targets are shown 
+	fixation_circle = visual.Circle(win, radius = 50, pos = (0,0))
+	target_circle = visual.Circle(win, radius = 50, pos= (0,0), lineColor = 'green') # init at center, but update per trial 
+	dist_circle = visual.Circle(win, radius = 50, pos= (0,0), lineColor = 'blue') # init at center, but update per trial
+	
+	
+	
+	target_circle_big = visual.Circle(win, radius = 107, pos= (0,0), lineColor = 'green') # init at center, but update per trial 
+	dist_circle_big = visual.Circle(win, radius = 107, pos= (0,0), lineColor = 'blue') # init at center, but update per trial 
+	__end__
+
