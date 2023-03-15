@@ -206,13 +206,14 @@ define inline_script singleton_session
 	        print(self.SOAs)
 	        self.num_blocks = self.settings["study"][self.exp_str]["num_blocks"]
 	
-	        
+	
 	        self.behav_file = behav_file
 	
 	        print(self.trial_parameters["target_orientation"], self.trial_parameters["distractor_orientation"])
-	        
+	
 	        self.trial_parameters["window_size"] = self.settings["window_extra"]["size"]
 	        self.trial_parameters["practice_trials"] = self.settings["study"][f"exp{self.exp_num}"]["practice_trials"]
+	        self.trial_parameters["ITI_wait"] = self.settings["trial_info"]["ITI_stim_2"]
 	
 	        self.instructions = {
 	            "target_direction": "left" if self.trial_parameters["target_orientation"] < 0 else "right",
@@ -220,16 +221,16 @@ define inline_script singleton_session
 	            "distractor_direction": "left" if self.trial_parameters["distractor_orientation"] < 0 else "right",
 	            "distractor_symbol": "\\" if self.trial_parameters["distractor_orientation"] < 0 else "/",
 	        }
-	        
+	
 	        print(self.instructions)
 	
 	                # TODO: Fixation point
 	        line_size_pix = deg2pix(self.settings["stimuli"]["fix_line_size_deg"], win.monitor)
 	        print("LINE SIZE", line_size_pix)
-	        
+	
 	        line_width_pix = deg2pix(self.settings["stimuli"]["fix_line_width_deg"], win.monitor)
 	        print("LINE WIDTH", line_width_pix)
-	        
+	
 	        self.fixation = visual.ShapeStim(win,
 	                                         vertices=((0, -line_size_pix / 2), (0, line_size_pix / 2),
 	                                                   (0, 0),
@@ -237,17 +238,20 @@ define inline_script singleton_session
 	                                         lineWidth=line_width_pix,
 	                                         closeShape=False,
 	                                         lineColor=self.settings['stimuli']['fix_color'])
-	        
+	
 	        self.max_dist = self.settings["stimuli"]["fix_check_rad"]
-	        
+	
 	        self.trial_parameters["max_dist"] = self.max_dist
 	        print("MAX_DIST", self.max_dist)
-	        
+	
 	        ########################
 	
 	    def run(self):
+	        
+	        RTs = []
+	        correct = []
 	        self.create_trials()
-	
+	        
 	        # if eyetracking then calibrate
 	        # eyetracker.calibrate_eyetracker()
 	
@@ -263,7 +267,7 @@ define inline_script singleton_session
 	                                   f"({self.instructions['distractor_symbol']})."
 	                                   f"\n Before each trial, press the -spacebar- to start"
 	                                   f"\n\n Press the -spacebar- to continue.")
-	        
+	
 	        draw_instructions(win, this_instruction_string, keys='space')
 	
 	        this_instruction_string = (f"\nTry to be as fast and accurate as possible!"
@@ -283,24 +287,22 @@ define inline_script singleton_session
 	
 	        if not self.debug:
 	            for trial in self.practice_trials:
-	                trial.run()
+	                end_of_block, RTs, correct = trial.run(RTs, correct)
+	                if end_of_block:
+	                    RTs = []
+	                    correct = []
 	
-	            this_instruction_string = (f"You will now start with the actual experiment."
-	                                    f"\n\nGoodluck."
-	                                    f"\n\nPlease press the -spacebar- to begin.")
-	
-	            draw_instructions(win, this_instruction_string, keys='space')
-	
-	            self.fixation.draw()
-	            win.flip()
 	
 	        # if self.eyetracker_on:
 	        #     eyetracker.start_recording()
 	
 	        for trial in self.trials:
-	            trial.run()
+	            end_of_block, RTs, correct = trial.run(RTs, correct)
+	            if end_of_block:
+	                RTs = []
+	                correct = []
+	        
 	
-	        self.close()
 	
 	    def create_trials(self):
 	        # TODO: Check this - I think Ines used vertical and psychopy uses horizontal to convert
@@ -321,15 +323,15 @@ define inline_script singleton_session
 	        # # init variables for feedback
 	        #
 	        # check if they moved their eyes before targets are shown
-	        fixation_circle = visual.Circle(win, radius=self.max_dist, pos=(0, 0), units='deg')
+	        # fixation_circle = visual.Circle(win, radius=self.max_dist, pos=(0, 0), units='deg')
 	
 	        # Save memory - don't construct for each rep
 	        possible_grids = dict()
 	        possible_singletons = dict()
-	        target_circles = dict()
-	        dist_circles = dict()
-	        target_big_circles = dict()
-	        dist_big_circles = dict()
+	        # target_circles = dict()
+	        # dist_circles = dict()
+	        # target_big_circles = dict()
+	        # dist_big_circles = dict()
 	
 	        for bg_orientation in self.bg_orientations:
 	            for target_coord, distractor_coord in possible_singleton_locations:
@@ -358,16 +360,16 @@ define inline_script singleton_session
 	                                                                   sizes=(pixel_w, pixel_l),
 	                                                                   elementMask=None,
 	                                                                   elementTex=None)
-	                target_circles[key] = visual.Circle(win, radius=50, pos=target_coord, lineColor='green')
-	                dist_circles[key] = visual.Circle(win, radius=50, pos=distractor_coord, lineColor='blue')
-	                target_big_circles[key] = visual.Circle(win, radius=107, pos=target_coord, lineColor='green')
-	                dist_big_circles[key] = visual.Circle(win, radius=107, pos=distractor_coord, lineColor='blue')
+	                # target_circles[key] = visual.Circle(win, radius=50, pos=target_coord, lineColor='green')
+	                # dist_circles[key] = visual.Circle(win, radius=50, pos=distractor_coord, lineColor='blue')
+	                # target_big_circles[key] = visual.Circle(win, radius=107, pos=target_coord, lineColor='green')
+	                # dist_big_circles[key] = visual.Circle(win, radius=107, pos=distractor_coord, lineColor='blue')
 	
 	        num_trials = (self.num_reps *
 	                      len(self.bg_orientations) *
 	                      len(self.SOAs) *
 	                      len(possible_singleton_locations))
-	        
+	
 	        print("num_trials: ", num_trials)
 	        if num_trials % self.num_blocks != 0:
 	            raise RuntimeError(f"{self.num_blocks} blocks won't divide {num_trials} trials evenly. Change experiment settings.")
@@ -377,10 +379,16 @@ define inline_script singleton_session
 	        print("NUM TRIALS", num_trials)
 	        print("NUM BLOCKS", self.num_blocks)
 	        print("TRIALS PER BLOCK", trials_per_block)
-	        
+	        self.trial_parameters["num_blocks"] = self.num_blocks
+	        self.trial_parameters["singleton_area"] = self.settings["stimuli"]["singleton_area"]
+	
 	        trial_indices = np.arange(num_trials)
 	        np.random.shuffle(trial_indices)  # Randomise trials
 	        trial_i = 0
+	        
+	        practice_trial_indices = np.arange(self.settings["study"][self.exp_str]["practice_trials"])
+	        np.random.shuffle(practice_trial_indices)
+	        
 	
 	        tone = sound.Sound('A')
 	
@@ -394,7 +402,7 @@ define inline_script singleton_session
 	
 	                        trial_num = trial_indices[trial_i]
 	                        block_num = (trial_num // trials_per_block) + 1
-	                        trial_i += 1
+	
 	                        key = f"{bg_orientation}{target_coord}{distractor_coord}"
 	
 	                        _trial_parameters = deepcopy(self.trial_parameters)
@@ -435,13 +443,10 @@ define inline_script singleton_session
 	                            "initialization": initialization_time,
 	                            "stimulus1": np.abs(SOA),
 	                            "stimulus2": self.settings["trial_info"]["max_response_time"],
-	                            "ITI": self.settings["trial_info"]["ITI"] + np.random.uniform(-100, 100),
+	                            "ITI": self.settings["trial_info"]["ITI"] + np.random.uniform(-100, 100) - self.trial_parameters["ITI_wait"],
 	                        }
-	
-	                        if (trial_num + 1) % trials_per_block == 0:
-	                            phases["end_of_block"] = 1000
-	                            
-	                        self.trials.append(SingletonTrial(trial_nr=trial_num,
+	                        
+	                        trial = SingletonTrial(trial_nr=trial_num,
 	                                                          block_num=block_num,
 	                                                          phases=phases,
 	                                                          parameters=_trial_parameters,
@@ -449,34 +454,59 @@ define inline_script singleton_session
 	                                                          stimulus2=stimulus2,
 	                                                          tone=tone,
 	                                                          debug=self.debug,
-	                                                          behavioural_file=self.behav_file,
-	                                                          fixation_circle=fixation_circle,
-	                                                          target_circle=target_circles[key],
-	                                                          distractor_circle=dist_circles[key],
-	                                                          target_circle_big=target_big_circles[key],
-	                                                          distractor_circle_big=dist_big_circles[key]))
+	                                                          behavioural_file=self.behav_file)
+	                                                          # fixation_circle=fixation_circle)
+	                                                          # target_circle=target_circles[key],
+	                                                          # distractor_circle=dist_circles[key],
+	                                                          # target_circle_big=target_big_circles[key],
+	                                                          # distractor_circle_big=dist_big_circles[key])
+	
+	                        if (trial_num + 1) % trials_per_block == 0:
+	                            trial.phases["end_of_block"] = 1000
+	
+	                        self.trials.append(trial)
+	                        
+	                        if trial_i < self.settings["study"][self.exp_str]["practice_trials"]:
+	                            practice_trial_num = practice_trial_indices[trial_i]
+	                            practice_trial = SingletonTrial(trial_nr=practice_trial_num,
+	                                                              block_num=0,
+	                                                              phases=phases,
+	                                                              parameters=_trial_parameters,
+	                                                              stimulus1=stimulus1,
+	                                                              stimulus2=stimulus2,
+	                                                              tone=tone,
+	                                                              debug=self.debug,
+	                                                              behavioural_file=self.behav_file)
+	                                                              # fixation_circle=fixation_circle)
+	                                                              # target_circle=target_circles[key],
+	                                                              # distractor_circle=dist_circles[key],
+	                                                              # target_circle_big=target_big_circles[key],
+	                                                              # distractor_circle_big=dist_big_circles[key])
+	                            
+	                            if practice_trial_num == self.settings["study"][self.exp_str]["practice_trials"] - 1:
+	                                practice_trial.phases["end_of_block"] = 1000
+	                                
+	                            practice_trial.parameters["practice"] = True
+	                            self.practice_trials.append(practice_trial)
+	                        
+	                        trial_i += 1
+	                            
 	
 	        # if not self.debug:
 	        # TODO Check how to construct practice trials
-	        
-	        self.trials = sorted(self.trials, key=lambda trial: trial.trial_nr)
-	        
-	        # for trial in self.trials:
-	        #     print(trial.trial_nr, trial.SOA, "end of block?", "end_of_block" in trial.phases.keys())
-	        
-	        self.practice_trials = np.random.choice([trial for trial in self.trials if "end of block" not in trial.phases.keys()], # Ensures no end_of_block trials
-	                                                self.settings["study"][self.exp_str]["practice_trials"])
-	        print(len(self.practice_trials))
-	        for i in range(len(self.practice_trials)):
-	            self.practice_trials[i].trial_nr = i
-	            self.practice_trials[i].parameters["practice"] = True
 	
-	            if i == len(self.practice_trials) - 1:
-	                self.practice_trials[i].phases["end_of_block"] = 1000
-	                
-	        # for trial in self.practice_trials:
-	        #     print(trial.trial_nr, trial.SOA, "end of block?", "end_of_block" in trial.phases.keys())
-	        
+	        self.trials = sorted(self.trials, key=lambda trial: trial.trial_nr)
+	        self.practice_trials = sorted(self.practice_trials, key=lambda trial: trial.trial_nr)
+	
+	        print("TRIALS")
+	        for trial in self.trials:
+	            print(trial.trial_nr, trial.block_num, "end_of_block" in trial.phases.keys())
+	
+	        print("PRACTICE TRIALS")
+	        for trial in self.practice_trials:
+	            print(trial.trial_nr, trial.block_num, "end_of_block" in trial.phases.keys())
+	
+	
 	
 	        # for i in range(len(self.practice_trials[0].phase_durations)):
 	        #     print(self.practice_trials[0].phase_names[i], self.practice_trials[0].phase_durations[i])
@@ -526,12 +556,12 @@ define inline_script singleton_trial
 	                 stimulus2: ElementArrayStim,
 	                 tone: sound.Sound,
 	                 behavioural_file: str,
-	                 debug: bool,
-	                 fixation_circle: Circle,
-	                 target_circle: Circle,
-	                 distractor_circle: Circle,
-	                 target_circle_big: Circle,
-	                 distractor_circle_big: Circle):
+	                 debug: bool):
+	                 # fixation_circle: Circle,
+	                 # target_circle: Circle,
+	                 # distractor_circle: Circle,
+	                 # target_circle_big: Circle,
+	                 # distractor_circle_big: Circle):
 	
 	
 	        self.RT = None
@@ -548,15 +578,15 @@ define inline_script singleton_trial
 	        self.target_orientation = parameters["target_orientation"]
 	        self.distractor_orientation = parameters["distractor_orientation"]
 	        
-	        self.target_circle = target_circle
-	        self.target_circle_big = target_circle_big
-	        self.distractor_circle = distractor_circle
-	        self.distractor_circle_big = distractor_circle_big
-	        self.fixation_circle = fixation_circle
+	        # self.target_circle = target_circle
+	        # self.target_circle_big = target_circle_big
+	        # self.distractor_circle = distractor_circle
+	        # self.distractor_circle_big = distractor_circle_big
+	        # self.fixation_circle = fixation_circle
 	
 	        # Delete tuples from parameters since they cannot be logged
-	        del parameters["target_pos"]
-	        del parameters["distractor_pos"]
+	        # del parameters["target_pos"]
+	        # del parameters["distractor_pos"]
 	
 	
 	        self.stimulus1 = stimulus1
@@ -565,13 +595,13 @@ define inline_script singleton_trial
 	        self.trial_nr = trial_nr
 	        self.block_num = block_num
 	
-	        self.parameters = parameters
+	        self.parameters = dict(parameters)
 	
 	        self.a_sound = tone
 	
 	        self.behavioural_file = behavioural_file
 	        self.debug = debug
-	        self.phases = phases
+	        self.phases = dict(phases)
 	
 	        # self.singletons = singletons
 	        # self.target_stim = target_stim
@@ -641,18 +671,34 @@ define inline_script singleton_trial
 	    def draw_stim2(self):
 	        self.stimulus1.draw()
 	        self.stimulus2.draw()
+	        # visual.Circle(win, radius=self.parameters["max_dist"], pos=self.target_pos, lineColor='green', units='deg').draw()
+	        # visual.Circle(win, radius=self.parameters["max_dist"], pos=self.distractor_pos, lineColor='green', units='deg').draw()
+	        # visual.Circle(win, radius=self.parameters["max_dist"], pos=(0,0), lineColor='green', units='deg').draw()
+	        
 	        win.flip()
 	        
 	        eyetracker.log(self.parameters["stimulus2_log"])
-	        self.endtime, self.startpos, self.endpos = wait_for_saccade_end_timeout(self.phases["stimulus2"])
-	 
-	        response, RT, self.success = self.response_check()
 	        
-	        if response is not None:
+	        response = 'fixate'
+	        
+	        
+	        for ms in clock.loop_for(self.phases["stimulus2"]):
+	            try:
+	                self.endtime, self.startpos, self.endpos = wait_for_saccade_end_timeout(self.phases["stimulus2"])
+	            except AttributeError:
+	                self.endtime, self.startpos, self.endpos = eyetracker.wait_for_saccade_end()
+	            if self.startpos is None: # Didn't leave fixation
+	                return False
+	            response, RT, self.success = self.response_check()
+	            if response != 'fixate':
+	                break
+	        
+	        if response is not None and response != 'fixate':
 	            # print("RESPONSE CAPTURED", response)
 	            if response == 'distractor':
 	                return False
-	            RTs.append(RT)
+	            
+	            self.RTs.append(RT)
 	        else:
 	            return False
 	
@@ -685,28 +731,52 @@ define inline_script singleton_trial
 	        self.save_results()
 	        
 	    def end_of_block(self):
-	        print(self.trial_nr)
 	        # print("RT LEN", len(RTs))
-	        avg_RT = 0 #np.round(np.nanmean(RTs) * 1000)
+	        avg_RT = np.round(np.nanmean(self.RTs) * 1000)
+	        accuracy = np.round(np.nanmean(self.correct) * 100)
+	        
 	        this_instruction_string = (f"This was block {self.block_num}"
-	                               f"\n\n Your average response time was {avg_RT} ms."
+	                               f"\n\n Your accuracy was {accuracy}%"
+	                               f"\n Your average response time was {avg_RT} ms."
 	                               f"\n Well done! "
 	                               f"\n\nPlease press the -spacebar- to begin.")
+	        
+	        if self.parameters["practice"]:
+	                    this_instruction_string = (f"That concludes the practice round"
+	                               f"\n\n Your accuracy was {accuracy}%"
+	                               f"\n\n Your average response time was {avg_RT} ms."
+	                               f"\n Well done! "
+	                               f"\n\nYou will now start with the actual experiment."
+	                               f"\n\nGoodluck."
+	                               f"\n\nPlease press the -spacebar- to begin.")
+	                    
+	        if self.block_num == self.parameters["num_blocks"]:
+	            this_instruction_string = (f"This was the last block!"
+	                               f"\n\n Your accuracy was {accuracy}%"
+	                               f"\n Your average response time was {avg_RT} ms."
+	                               f"\n Well done! "
+	                               f"\n\nPlease press the -spacebar- to end the experiment.")
+	            
 	
 	
-	        text1 = visual.TextStim(win, text=this_instruction_string, pos=(0, 0), font="Helvetica Neue", height=30,
-	                                anchorHoriz='center', anchorVert='center')
+	        draw_instructions(win, this_instruction_string, keys='space')
 	
-	        text1.draw()
-	        win.flip()
 	        # RTs = []
 	        self.save_results()
+	        
 	        
 	
 	    
 	
 	    
-	    def run(self):
+	    def run(self, RTs, correct):
+	        
+	
+	        self.RTs = RTs
+	        print("RTs", self.RTs)
+	        print("CORRECT", correct)
+	        print("BLOCK_INFO", self.block_num, self.parameters["num_blocks"])
+	        self.correct = correct
 	        
 	        print("practice", self.parameters["practice"])
 	        
@@ -718,7 +788,7 @@ define inline_script singleton_trial
 	            if not self.fix_check():
 	                self.ITI()
 	                clock.sleep(self.phases["ITI"])
-	                return 
+	                return False, self.RTs, self.correct
 	        
 	        
 	        self.draw_stim1()
@@ -732,21 +802,24 @@ define inline_script singleton_trial
 	                if not self.fix_check():
 	                    self.ITI()
 	                    clock.sleep(self.phases["ITI"])
-	                    return 
+	                    return False, self.RTs, self.correct
 	        
 	        
-	        if not self.draw_stim2():
-	            self.ITI()
-	            clock.sleep(self.phases["ITI"])
-	            return
+	       
 	        
-	        print("STIM 2 DRAWN")
+	        self.draw_stim2()
 	        
-	        # clock.sleep(self.phases["stimulus2"])
-	        
+	        clock.sleep(self.parameters["ITI_wait"])  # Wait before removing grid, otherwise too fast
 	        self.ITI()
 	        
 	        clock.sleep(self.phases["ITI"])
+	        
+	        # print("STIM 2 DRAWN")
+	        
+	        # clock.sleep(self.phases["stimulus2"])
+	        
+	
+	    
 	        
 	        #         key = event.getKeys(keyList = ['space'])
 	        # if len(key)> 0: 
@@ -755,12 +828,13 @@ define inline_script singleton_trial
 	        
 	        if "end_of_block" in self.phases.keys():
 	            self.end_of_block()
+	            return True, self.RTs, self.correct
 	            # for ms in clock.loop_for(self.phases["end_of_block"]):
 	            key = event.waitKeys(keyList = ['space', 'q', 'esc'])
 	            if len(key)> 0: 
-	                return
+	                return True, self.RTs, self.correct
 	                    
-	        
+	        return False, self.RTs, self.correct
 	        
 	        # print(self.phase)
 	        # for i in range(len(self.phase_names)):
@@ -799,30 +873,42 @@ define inline_script singleton_trial
 	        t1 = core.getTime()
 	        RT = t1 - self.t0
 	        
-	        if distance(cur_pos, self.target_pos, True, win) < self.parameters["max_dist"]:
+	        if distance(cur_pos, self.target_pos, True, win) < self.parameters["singleton_area"]:
 	            response = 'target'
-	            to_target_list.append(1)
+	            print("TARGET POS", self.target_pos)
+	            self.correct.append(1)
 	            success = True
-	        elif distance(cur_pos, self.distractor_pos, True, win) < self.parameters["max_dist"]:
+	        elif distance(cur_pos, self.distractor_pos, True, win) < self.parameters["singleton_area"]:
 	            response = 'distractor'
-	            to_target_list.append(0)
+	            print("DIST POS", self.distractor_pos)
+	            self.correct.append(0)
 	            success = True
 	            # print("DIST COORD", self.distractor_pos)
 	            # print("TARGET COORD", self.target_pos)
 	            # print("CUR_POS", cur_pos)
 	            
 	            if self.parameters["practice"]: 
+	                clock.sleep(self.parameters["ITI_wait"])
 	                my_synth.play()
 	                warning_text.draw()
 	                win.flip()
 	                core.wait(1)
+	        elif distance(cur_pos, (0,0), True, win) > self.parameters["max_dist"]:
+	           clock.sleep(self.parameters["ITI_wait"])
+	           success = False
+	           my_synth.play()
+	           warning_text = visual.TextStim(win, text='Make one eye movement to the target!')
+	           # visual.Circle(win, radius=1.5 * self.parameters["max_dist"], pos=(0,0), lineColor='green', units='deg').draw()
+	           warning_text.draw()
+	           win.flip()
+	           core.wait(1)
+	           response = None
 	        else:
-	            success = False
-	            warning_text = visual.TextStim(win, text='Make one eye movement to the target!')
-	            warning_text.draw()
-	            win.flip()
-	            core.wait(1)
-	            response = None
+	            print("FIXATION")
+	            response = 'fixation'
+	            success = None
+	        
+	        
 	            
 	        return response, RT, success
 	    
@@ -963,6 +1049,7 @@ define inline_script utils
 	def wait_for_saccade_end_timeout(timeout=None):
 	    """endtime, startpos, endpos"""
 	    t0 = clock.time()
+	    tc = timeout
 	    for ms in clock.loop_for(timeout):
 	        d = pylink.getEYELINK().getNextData()
 	        if d == pylink.ENDSACC:
@@ -970,6 +1057,10 @@ define inline_script utils
 	            tc = float_data.getTime() - eyetracker._get_eyelink_clock_async()
 	            if tc > t0:
 	                break
+	                
+	    if tc == timeout:
+	        return -1, None, None
+	    
 	    return tc, float_data.getStartGaze(), float_data.getEndGaze()
 	
 	# TODO: This should return two sizes, one for vert, one for hori
@@ -1164,7 +1255,7 @@ define inline_script utils
 	    text = visual.TextStim(win=win,
 	                           text=instructions,
 	                           color=color,
-	                           font=font,
+	                           # font=font,
 	                           pos=pos,
 	                           height=height,
 	                           italic=italic,

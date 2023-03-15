@@ -6,9 +6,9 @@ preferences:
 study:
   no_exps: 2
   exp2:
-    SOAs: [-30, 30] #, -0, 100]
+    SOAs: [-100, -30, 0, 30, 100] #, -0, 100]
     num_reps: 1
-    num_blocks: 4
+    num_blocks: 5
     practice_trials: 20
 
 window: # refers to the parameters for the Psychopy Window class
@@ -66,12 +66,14 @@ stimuli:
   fix_line_size_deg: 0.7
   fix_line_width_deg: 0.3
   fix_color: [ 1, 1, 1 ] # psychopy rgb white]
-  fix_check_rad: 2
+  fix_check_rad: 1.5
+  singleton_area: 2.4
 
 trial_info:
   break_trial_num: 50
   initialization_time: 200
   ITI: 500
-  max_response_time: 1000
+  max_response_time: 2000
+  ITI_stim_2: 100
 
 
