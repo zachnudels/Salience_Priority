@@ -252,11 +252,6 @@ define inline_script singleton_session
 	        correct = []
 	        self.create_trials()
 	        
-	        # if eyetracking then calibrate
-	        # eyetracker.calibrate_eyetracker()
-	
-	
-	        # self.start_experiment()
 	
 	        # draw instructions wait a few seconds
 	        this_instruction_string = (f"Instructions"
@@ -386,7 +381,7 @@ define inline_script singleton_session
 	        np.random.shuffle(trial_indices)  # Randomise trials
 	        trial_i = 0
 	        
-	        practice_trial_indices = np.arange(self.settings["study"][self.exp_str]["practice_trials"])
+	        practice_trial_indices = np.arange(num_trials)
 	        np.random.shuffle(practice_trial_indices)
 	        
 	
@@ -396,9 +391,10 @@ define inline_script singleton_session
 	
 	
 	        for rep in range(self.num_reps):
-	            for bg_orientation in self.bg_orientations:
-	                for SOA in self.SOAs:
-	                    for target_coord, distractor_coord in possible_singleton_locations:
+	            for target_coord, distractor_coord in possible_singleton_locations:
+	                for bg_orientation in self.bg_orientations:
+	                    for SOA in self.SOAs:
+	                    
 	
 	                        trial_num = trial_indices[trial_i]
 	                        block_num = (trial_num // trials_per_block) + 1
@@ -466,28 +462,28 @@ define inline_script singleton_session
 	
 	                        self.trials.append(trial)
 	                        
-	                        if trial_i < self.settings["study"][self.exp_str]["practice_trials"]:
-	                            practice_trial_num = practice_trial_indices[trial_i]
-	                            practice_trial = SingletonTrial(trial_nr=practice_trial_num,
-	                                                              block_num=0,
-	                                                              phases=phases,
-	                                                              parameters=_trial_parameters,
-	                                                              stimulus1=stimulus1,
-	                                                              stimulus2=stimulus2,
-	                                                              tone=tone,
-	                                                              debug=self.debug,
-	                                                              behavioural_file=self.behav_file)
-	                                                              # fixation_circle=fixation_circle)
-	                                                              # target_circle=target_circles[key],
-	                                                              # distractor_circle=dist_circles[key],
-	                                                              # target_circle_big=target_big_circles[key],
-	                                                              # distractor_circle_big=dist_big_circles[key])
+	                        # if trial_i < self.settings["study"][self.exp_str]["practice_trials"]:
+	                        practice_trial_num = practice_trial_indices[trial_i]
+	                        practice_trial = SingletonTrial(trial_nr=practice_trial_num,
+	                                                          block_num=0,
+	                                                          phases=phases,
+	                                                          parameters=_trial_parameters,
+	                                                          stimulus1=stimulus1,
+	                                                          stimulus2=stimulus2,
+	                                                          tone=tone,
+	                                                          debug=self.debug,
+	                                                          behavioural_file=self.behav_file)
+	                                                          # fixation_circle=fixation_circle)
+	                                                          # target_circle=target_circles[key],
+	                                                          # distractor_circle=dist_circles[key],
+	                                                          # target_circle_big=target_big_circles[key],
+	                                                          # distractor_circle_big=dist_big_circles[key])
+	                        
+	                        if practice_trial_num == self.settings["study"][self.exp_str]["practice_trials"] - 1:
+	                            practice_trial.phases["end_of_block"] = 1000
 	                            
-	                            if practice_trial_num == self.settings["study"][self.exp_str]["practice_trials"] - 1:
-	                                practice_trial.phases["end_of_block"] = 1000
-	                                
-	                            practice_trial.parameters["practice"] = True
-	                            self.practice_trials.append(practice_trial)
+	                        practice_trial.parameters["practice"] = True
+	                        self.practice_trials.append(practice_trial)
 	                        
 	                        trial_i += 1
 	                            
@@ -497,14 +493,15 @@ define inline_script singleton_session
 	
 	        self.trials = sorted(self.trials, key=lambda trial: trial.trial_nr)
 	        self.practice_trials = sorted(self.practice_trials, key=lambda trial: trial.trial_nr)
+	        self.practice_trials = self.practice_trials[:self.settings["study"][self.exp_str]["practice_trials"]]
 	
-	        print("TRIALS")
-	        for trial in self.trials:
-	            print(trial.trial_nr, trial.block_num, "end_of_block" in trial.phases.keys())
+	        # print("TRIALS")
+	        # for trial in self.trials:
+	        #     print(trial.trial_nr, trial.block_num, "end_of_block" in trial.phases.keys(), trial.SOA)
 	
 	        print("PRACTICE TRIALS")
 	        for trial in self.practice_trials:
-	            print(trial.trial_nr, trial.block_num, "end_of_block" in trial.phases.keys())
+	            print(trial.trial_nr, trial.block_num, "end_of_block" in trial.phases.keys(), trial.SOA, trial.bg_orientation)
 	
 	
 	
@@ -733,17 +730,17 @@ define inline_script singleton_trial
 	    def end_of_block(self):
 	        # print("RT LEN", len(RTs))
 	        avg_RT = np.round(np.nanmean(self.RTs) * 1000)
-	        accuracy = np.round(np.nanmean(self.correct) * 100)
+	        # accuracy = np.round(np.nanmean(self.correct) * 100)
 	        
 	        this_instruction_string = (f"This was block {self.block_num}"
-	                               f"\n\n Your accuracy was {accuracy}%"
+	                               # f"\n\n Your accuracy was {accuracy}%"
 	                               f"\n Your average response time was {avg_RT} ms."
 	                               f"\n Well done! "
 	                               f"\n\nPlease press the -spacebar- to begin.")
 	        
 	        if self.parameters["practice"]:
 	                    this_instruction_string = (f"That concludes the practice round"
-	                               f"\n\n Your accuracy was {accuracy}%"
+	                               # f"\n\n Your accuracy was {accuracy}%"
 	                               f"\n\n Your average response time was {avg_RT} ms."
 	                               f"\n Well done! "
 	                               f"\n\nYou will now start with the actual experiment."
@@ -752,7 +749,7 @@ define inline_script singleton_trial
 	                    
 	        if self.block_num == self.parameters["num_blocks"]:
 	            this_instruction_string = (f"This was the last block!"
-	                               f"\n\n Your accuracy was {accuracy}%"
+	                               # f"\n\n Your accuracy was {accuracy}%"
 	                               f"\n Your average response time was {avg_RT} ms."
 	                               f"\n Well done! "
 	                               f"\n\nPlease press the -spacebar- to end the experiment.")
