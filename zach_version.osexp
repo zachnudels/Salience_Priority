@@ -1,7 +1,7 @@
 ---
 API: 2.1
 OpenSesame: 3.3.14
-Platform: posix
+Platform: nt
 ---
 set width 1920
 set uniform_coordinates yes
@@ -27,7 +27,7 @@ set font_size 18
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "/Users/zach/RA_2023/Salience_Priority/experiment"
+set experiment_path "C:/Users/RA-Eyelink/Salience_Priority"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -48,13 +48,13 @@ define inline_script constants
 	
 	debug = False
 	exp_num = 2
-	# cwd =  "C:\\Users\\RA-Eyelink\\Salience_Priority"
-	cwd = '/Users/zach/RA_2023/Salience_Priority/experiment'
+	cwd =  "C:\\Users\\RA-Eyelink\\Salience_Priority"
+	#cwd = '/Users/zach/RA_2023/Salience_Priority/experiment'
 	results = []
 	to_target_list = []
 	RTs = []
 	
-	TRACKER_ON = type(eyetracker) != pygaze._eyetracker.libdummytracker.Dummy
+	TRACKER_ON = True #type(eyetracker) != pygaze._eyetracker.libdummytracker.Dummy
 	__end__
 	set _prepare ""
 
@@ -132,7 +132,7 @@ define inline_script main
 	set _prepare ""
 
 define pygaze_init new_pygaze_init
-	set tracker_type "Advanced dummy (mouse simulation)"
+	set tracker_type EyeLink
 	set tobiiglasses_udpport 49152
 	set tobiiglasses_address "192.168.71.50"
 	set smi_send_port 4444
