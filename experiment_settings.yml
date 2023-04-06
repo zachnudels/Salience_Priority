@@ -6,10 +6,30 @@ preferences:
 study:
   no_exps: 2
   exp2:
-    SOAs: [-100, -30, 0, 30, 100] #, -0, 100]
+    SOAs: [-100, -30, 0, 30, 100]
     num_reps: 1
     num_blocks: 5
     practice_trials: 20
+
+stimuli:
+  num_singletons: 2
+  bg_orientation: [10, -10]
+  singleton_orientation: [30, -30]
+  x_count: 15
+  y_count: 15
+  spacing: 0.9 # spacing betweeb elements
+  line_length: 0.9
+  line_width: 0.2
+  line_color: "#AAAAAA"
+  fix_check_rad: 1.5  # How far away from fixation before trial restart
+  singleton_area: 2.4  # How close to singleton before successful saccade counted
+
+trial_info:
+  initialization_time: 200
+  ITI: 500
+  max_response_time: 2000
+  ITI_wait: 100  # Keep items on screen so doesn't feel to rushed
+  jitter: 100  # Random jitter between -<jitter>, +<jitter>
 
 window: # refers to the parameters for the Psychopy Window class
   units: pix
@@ -50,30 +70,3 @@ eyetracker:
     sample_rate: 1000
     calibration_area_proportion: 0.7 0.7 #0.88 0.83
     validation_area_proportion: 0.7 0.7 #0.88 0.83
-
-stimuli:
-  num_singletons: 2
-  bg_orientation: [10, -10]
-  singleton_orientation: [30, -30]
-  x_count: 15
-  y_count: 15
-  spacing: 0.9
-  line_length: 0.9  # 19 * 2
-  line_width: 0.2  # 3 * 2
-  line_color: "#AAAAAA"
-  jitter: 0
-  fix_dot_size_deg: 0.05
-  fix_line_size_deg: 0.7
-  fix_line_width_deg: 0.3
-  fix_color: [ 1, 1, 1 ] # psychopy rgb white]
-  fix_check_rad: 1.5
-  singleton_area: 2.4
-
-trial_info:
-  break_trial_num: 50
-  initialization_time: 200
-  ITI: 500
-  max_response_time: 2000
-  ITI_stim_2: 100
-
-

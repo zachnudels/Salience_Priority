@@ -1,7 +1,7 @@
 ---
 API: 2.1
 OpenSesame: 3.3.14
-Platform: nt
+Platform: posix
 ---
 set width 1920
 set uniform_coordinates yes
@@ -27,7 +27,7 @@ set font_size 18
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "C:/Users/RA-Eyelink/Salience_Priority"
+set experiment_path "/Users/zach/RA_2023/Salience_Priority/experiment"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -39,18 +39,24 @@ set background black
 
 define inline_script constants
 	set description "Executes Python code"
-	set _run ""
-	___prepare__
+	___run__
+	"""
+	Define some experimental constants.
+	If running on local machine, change second cwd to the desired folder and then comment out the first cwd
+	"""
+	import pygaze
+	
 	debug = False
 	exp_num = 2
-	cwd =  "C:\\Users\\RA-Eyelink\\Salience_Priority"
-	cwd_ = '/Users/zach/RA_2023/Salience_Priority/experiment'
+	# cwd =  "C:\\Users\\RA-Eyelink\\Salience_Priority"
+	cwd = '/Users/zach/RA_2023/Salience_Priority/experiment'
 	results = []
 	to_target_list = []
 	RTs = []
 	
-	print(cwd)
+	TRACKER_ON = type(eyetracker) != pygaze._eyetracker.libdummytracker.Dummy
 	__end__
+	set _prepare ""
 
 define sequence experiment
 	set flush_keyboard yes
@@ -65,6 +71,10 @@ define sequence experiment
 define inline_script main
 	set description "Executes Python code"
 	___run__
+	"""
+	File to read in settings file, initialize Session and run it.
+	"""
+	
 	from psychopy import visual, core, event
 	from psychopy.tools.monitorunittools import deg2pix
 	import random
@@ -77,70 +87,52 @@ define inline_script main
 	import yaml
 	
 	
-	with open(op.join(cwd, 'experiment_settings.yml'), 'r') as f_in:
-	    params = yaml.safe_load(f_in)
+	def main():
+	    with open(op.join(cwd, 'experiment_settings.yml'), 'r') as f_in:
+	        params = yaml.safe_load(f_in)
+	        
+	    sj_num = self.get('subject_nr') # subject number
 	    
+	    
+	    print(f"Running experiment {exp_num} for subject {sj_num}")
+	    
+	    # make output dir
+	    if params['paths']['curr_dir'] == 'lab':
+	        output_dir = op.join(params['paths']['data_pth']['lab'], 'output', 'sourcedata', 'sub-{sj}'.format(sj=sj_num))
+	    else:
+	        base_dir = op.split(cwd)[0]  # main path for all folders of project
+	        output_dir = op.join(base_dir, 'output', 'sourcedata', 'sub-{sj}'.format(sj=sj_num))
+	    
+	    # if output path doesn't exist, create it
+	    if not op.isdir(output_dir):
+	        os.makedirs(output_dir)
+	    print('saving files in %s' % output_dir)
+	    
+	    # if file already exists
+	    output_str = str(sj_num)
+	    behav_file = op.join(output_dir, f"behavioral_data_mieke{sj_num}.pickle")
+	    
+	    if op.exists(behav_file):
+	        print('file already exists!')
+	        
+	    exp_sess = SingletonSession(output_str=output_str,
+	                                output_dir=output_dir,
+	                                eyetracker_on=True,
+	                                settings=params,
+	                                behav_file=behav_file,
+	                                subject_number=sj_num,
+	                                exp_num=exp_num,
+	                                debug=debug)
+	    
+	    exp_sess.run()
 	
-	# take user input
 	
-	# # define participant number and open json parameter file
-	# if len(sys.argv) < 2:
-	#     raise NameError('Please add subject number (ex:1) '
-	#                     'as 1st argument in the command line!')
-	
-	# elif len(sys.argv) < 3:
-	#     raise NameError('Please add session number (ex:1) '
-	#                     'as 2nd argument in the command line!')
-	
-	sj_num = self.get('subject_nr') # subject number
-	
-	
-	
-	# TODO: Check if practice always in same file?
-	# task name dictionary
-	print(f"Running experiment {exp_num} for subject {sj_num}")
-	
-	# make output dir
-	if params['paths']['curr_dir'] == 'lab':
-	    output_dir = op.join(params['paths']['data_pth']['lab'], 'output', 'sourcedata', 'sub-{sj}'.format(sj=sj_num))
-	else:
-	    base_dir = op.split(cwd)[0]  # main path for all folders of project
-	    output_dir = op.join(base_dir, 'output', 'sourcedata', 'sub-{sj}'.format(sj=sj_num))
-	
-	# if output path doesn't exist, create it
-	if not op.isdir(output_dir):
-	    os.makedirs(output_dir)
-	print('saving files in %s' % output_dir)
-	
-	# if file already exists
-	output_str = str(sj_num)
-	behav_file = op.join(output_dir, f"behavioral_data_mieke{sj_num}.pickle")
-	
-	if op.exists(behav_file):
-	    print('file already exists!')
-	
-	    # overwrite = ''
-	    # while overwrite not in ('y', 'yes', 'n', 'no'):
-	    #     overwrite = input('overwrite %s\n(y/yes/n/no)?: ' % behav_file)
-	
-	    # if overwrite in ['no', 'n']:
-	    #     raise NameError('Run %s already in directory\nstopping experiment!' % behav_file)
-	
-	exp_sess = SingletonSession(output_str=output_str,
-	                            output_dir=output_dir,
-	                            eyetracker_on=True,
-	                            settings=params,
-	                            behav_file=behav_file,
-	                            subject_number=sj_num,
-	                            exp_num=exp_num,
-	                            debug=debug)
-	
-	exp_sess.run()
+	main()
 	__end__
 	set _prepare ""
 
 define pygaze_init new_pygaze_init
-	set tracker_type EyeLink
+	set tracker_type "Advanced dummy (mouse simulation)"
 	set tobiiglasses_udpport 49152
 	set tobiiglasses_address "192.168.71.50"
 	set smi_send_port 4444
@@ -160,6 +152,15 @@ define pygaze_init new_pygaze_init
 define inline_script singleton_session
 	set description "Executes Python code"
 	___run__
+	"""
+	This file defines a Session Object
+	The Session object contains a list of trials and practice trials
+	which are constructed in the create_trials() method. 
+	
+	The run() method can be called to initialize and run the experiment.
+	"""
+	
+	
 	from typing import List, Tuple
 	import os 
 	
@@ -168,29 +169,34 @@ define inline_script singleton_session
 	from psychopy import visual
 	from psychopy import prefs
 	from psychopy import sound
-	# prefs.hardware['audioLib'] = ['PTB']
-	from psychopy.tools.monitorunittools import deg2pix
 	
-	# from singleton_trial import SingletonTrial
-	# from utils import grid_coordinates, dva_per_pix, draw_instructions, construct_singleton_pairs
+	from psychopy.tools.monitorunittools import deg2pix
 	
 	Coordinate = Tuple[int, int]
 	
 	
 	class SingletonSession():
 	    def __init__(self, output_str, output_dir, settings, behav_file, eyetracker_on, subject_number, exp_num, debug):
-	
 	        self.results = []
 	        self.practice_trials = []
 	        self.trials = []
-	        self.trial_parameters = dict()
-	        self.trial_parameters["subject_number"] = subject_number
+	        self.trial_parameters = {"subject_number": subject_number} # A dictionary containing global trial parameters
 	        self.to_target_list = []
 	        self.exp_num = exp_num
 	        self.debug = debug
 	        self.screen = np.array([win.size[0], win.size[1]])
 	        self.settings = settings
 	
+	        self.exp_str = f"exp{self.exp_num}"
+	        self.num_reps = self.settings["study"][self.exp_str]["num_reps"]
+	        self.bg_orientations = self.settings["stimuli"]["bg_orientation"]
+	        self.SOAs = self.settings["study"][self.exp_str]["SOAs"]
+	        self.num_blocks = self.settings["study"][self.exp_str]["num_blocks"]
+	        self.behav_file = behav_file
+	
+	        # print(self.trial_parameters["target_orientation"], self.trial_parameters["distractor_orientation"])
+	        
+	        # Counterbalancing here
 	        if subject_number % 2 == 0:
 	            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["singleton_orientation"][0]
 	            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["singleton_orientation"][1]
@@ -199,21 +205,11 @@ define inline_script singleton_session
 	            self.trial_parameters["target_orientation"] = self.settings["stimuli"]["singleton_orientation"][1]
 	            self.trial_parameters["distractor_orientation"] = self.settings["stimuli"]["singleton_orientation"][0]
 	
-	        self.exp_str = f"exp{self.exp_num}"
-	        self.num_reps = self.settings["study"][self.exp_str]["num_reps"]
-	        self.bg_orientations = self.settings["stimuli"]["bg_orientation"]
-	        self.SOAs = self.settings["study"][self.exp_str]["SOAs"]#[SOA*1e-3 for SOA in self.settings["study"][self.exp_str]["SOAs"]]
-	        print(self.SOAs)
-	        self.num_blocks = self.settings["study"][self.exp_str]["num_blocks"]
-	
-	
-	        self.behav_file = behav_file
-	
-	        print(self.trial_parameters["target_orientation"], self.trial_parameters["distractor_orientation"])
 	
 	        self.trial_parameters["window_size"] = self.settings["window_extra"]["size"]
 	        self.trial_parameters["practice_trials"] = self.settings["study"][f"exp{self.exp_num}"]["practice_trials"]
-	        self.trial_parameters["ITI_wait"] = self.settings["trial_info"]["ITI_stim_2"]
+	        self.trial_parameters["ITI_wait"] = self.settings["trial_info"]["ITI_wait"]
+	        self.trial_parameters["singleton_area"] = self.settings["stimuli"]["singleton_area"]
 	
 	        self.instructions = {
 	            "target_direction": "left" if self.trial_parameters["target_orientation"] < 0 else "right",
@@ -221,23 +217,6 @@ define inline_script singleton_session
 	            "distractor_direction": "left" if self.trial_parameters["distractor_orientation"] < 0 else "right",
 	            "distractor_symbol": "\\" if self.trial_parameters["distractor_orientation"] < 0 else "/",
 	        }
-	
-	        print(self.instructions)
-	
-	                # TODO: Fixation point
-	        line_size_pix = deg2pix(self.settings["stimuli"]["fix_line_size_deg"], win.monitor)
-	        print("LINE SIZE", line_size_pix)
-	
-	        line_width_pix = deg2pix(self.settings["stimuli"]["fix_line_width_deg"], win.monitor)
-	        print("LINE WIDTH", line_width_pix)
-	
-	        self.fixation = visual.ShapeStim(win,
-	                                         vertices=((0, -line_size_pix / 2), (0, line_size_pix / 2),
-	                                                   (0, 0),
-	                                                   (-line_size_pix / 2, 0), (line_size_pix / 2, 0)),
-	                                         lineWidth=line_width_pix,
-	                                         closeShape=False,
-	                                         lineColor=self.settings['stimuli']['fix_color'])
 	
 	        self.max_dist = self.settings["stimuli"]["fix_check_rad"]
 	
@@ -247,6 +226,12 @@ define inline_script singleton_session
 	        ########################
 	
 	    def run(self):
+	        """
+	        First create all the trials so we don't have to wait for that
+	        Then show the instructions
+	        Then execute practice trials
+	        Then execute actual trials
+	        """
 	        
 	        RTs = []
 	        correct = []
@@ -300,34 +285,28 @@ define inline_script singleton_session
 	
 	
 	    def create_trials(self):
-	        # TODO: Check this - I think Ines used vertical and psychopy uses horizontal to convert
+	        
+	        # Construct coordinates
 	        pixel_l = deg2pix(self.settings["stimuli"]["line_length"], win.monitor)
-	
 	        pixel_w = deg2pix(self.settings["stimuli"]["line_width"], win.monitor)
 	        pixel_spacing = deg2pix(self.settings["stimuli"]["spacing"], win.monitor) + np.max([pixel_l, pixel_w])
-	
 	        coordinates = grid_coordinates(self.settings["stimuli"]["x_count"],
 	                                       self.settings["stimuli"]["y_count"],
 	                                       pixel_spacing)
 	
+	        # To save memory, we construct all the possible objects and then address them so we can access 
+	        # them when constructing our trial objects
+	        
+	        # Returns a list of tuples of Coordinates where the first tuple is the target and the second the distractor
 	        possible_singleton_locations = construct_singleton_pairs(pixel_spacing,
 	                                                                 self.settings["stimuli"]["x_count"],
 	                                                                 self.settings["stimuli"]["y_count"])
 	
-	
-	        # # init variables for feedback
-	        #
-	        # check if they moved their eyes before targets are shown
-	        # fixation_circle = visual.Circle(win, radius=self.max_dist, pos=(0, 0), units='deg')
-	
-	        # Save memory - don't construct for each rep
 	        possible_grids = dict()
 	        possible_singletons = dict()
-	        # target_circles = dict()
-	        # dist_circles = dict()
-	        # target_big_circles = dict()
-	        # dist_big_circles = dict()
 	
+	        # We want to randomize presentation of:
+	        # Background orientation, Singleton Location
 	        for bg_orientation in self.bg_orientations:
 	            for target_coord, distractor_coord in possible_singleton_locations:
 	                grid_coords = [coordinate for coordinate in coordinates
@@ -355,17 +334,21 @@ define inline_script singleton_session
 	                                                                   sizes=(pixel_w, pixel_l),
 	                                                                   elementMask=None,
 	                                                                   elementTex=None)
-	                # target_circles[key] = visual.Circle(win, radius=50, pos=target_coord, lineColor='green')
-	                # dist_circles[key] = visual.Circle(win, radius=50, pos=distractor_coord, lineColor='blue')
-	                # target_big_circles[key] = visual.Circle(win, radius=107, pos=target_coord, lineColor='green')
-	                # dist_big_circles[key] = visual.Circle(win, radius=107, pos=distractor_coord, lineColor='blue')
+	
+	
+	        # To randomize trials but ensure blocks happen at the correct trial number,
+	        # We cannot construct our trials and then shuffle them since we want to set end_of_block now
+	        # So we create a list of trial numbers which we first shuffle.
+	        # Then as we can iterate over this list and assign a constructed trial with the now shuffled number.
+	        # We append them to our trial list and then sort on trial number. The numbers will be sorted but the 
+	        # contents of the trials will be random
+	        
 	
 	        num_trials = (self.num_reps *
 	                      len(self.bg_orientations) *
 	                      len(self.SOAs) *
 	                      len(possible_singleton_locations))
 	
-	        print("num_trials: ", num_trials)
 	        if num_trials % self.num_blocks != 0:
 	            raise RuntimeError(f"{self.num_blocks} blocks won't divide {num_trials} trials evenly. Change experiment settings.")
 	            self.close()
@@ -375,20 +358,15 @@ define inline_script singleton_session
 	        print("NUM BLOCKS", self.num_blocks)
 	        print("TRIALS PER BLOCK", trials_per_block)
 	        self.trial_parameters["num_blocks"] = self.num_blocks
-	        self.trial_parameters["singleton_area"] = self.settings["stimuli"]["singleton_area"]
 	
 	        trial_indices = np.arange(num_trials)
 	        np.random.shuffle(trial_indices)  # Randomise trials
 	        trial_i = 0
 	        
+	        # We do the same with practice trials then take the first N from that list. This ensures the practice trials
+	        # bear no relation with the actual trials since they are shuffled separately
 	        practice_trial_indices = np.arange(num_trials)
 	        np.random.shuffle(practice_trial_indices)
-	        
-	
-	        tone = sound.Sound('A')
-	
-	
-	
 	
 	        for rep in range(self.num_reps):
 	            for target_coord, distractor_coord in possible_singleton_locations:
@@ -412,7 +390,6 @@ define inline_script singleton_session
 	
 	                        _trial_parameters["target_pos"] = target_coord
 	                        _trial_parameters["distractor_pos"] = distractor_coord
-	                        # print(target_coord, distractor_coord)
 	                        _trial_parameters["bg_orientation"] = bg_orientation
 	                        _trial_parameters["SOA"] = SOA
 	
@@ -435,11 +412,14 @@ define inline_script singleton_session
 	                            stimulus2 = grid
 	                            _trial_parameters["stimulus2_log"] = "stimuli_show"
 	
+	                        jitter = self.settings["trial_info"]["jitter"]
 	                        phases = {
 	                            "initialization": initialization_time,
 	                            "stimulus1": np.abs(SOA),
 	                            "stimulus2": self.settings["trial_info"]["max_response_time"],
-	                            "ITI": self.settings["trial_info"]["ITI"] + np.random.uniform(-100, 100) - self.trial_parameters["ITI_wait"],
+	                            "ITI": self.settings["trial_info"]["ITI"] \
+	                                    + np.random.uniform(-jitter, jitter) \
+	                                    - self.trial_parameters["ITI_wait"],
 	                        }
 	                        
 	                        trial = SingletonTrial(trial_nr=trial_num,
@@ -448,21 +428,15 @@ define inline_script singleton_session
 	                                                          parameters=_trial_parameters,
 	                                                          stimulus1=stimulus1,
 	                                                          stimulus2=stimulus2,
-	                                                          tone=tone,
 	                                                          debug=self.debug,
 	                                                          behavioural_file=self.behav_file)
-	                                                          # fixation_circle=fixation_circle)
-	                                                          # target_circle=target_circles[key],
-	                                                          # distractor_circle=dist_circles[key],
-	                                                          # target_circle_big=target_big_circles[key],
-	                                                          # distractor_circle_big=dist_big_circles[key])
 	
 	                        if (trial_num + 1) % trials_per_block == 0:
 	                            trial.phases["end_of_block"] = 1000
 	
 	                        self.trials.append(trial)
 	                        
-	                        # if trial_i < self.settings["study"][self.exp_str]["practice_trials"]:
+	                        
 	                        practice_trial_num = practice_trial_indices[trial_i]
 	                        practice_trial = SingletonTrial(trial_nr=practice_trial_num,
 	                                                          block_num=0,
@@ -470,14 +444,8 @@ define inline_script singleton_session
 	                                                          parameters=_trial_parameters,
 	                                                          stimulus1=stimulus1,
 	                                                          stimulus2=stimulus2,
-	                                                          tone=tone,
 	                                                          debug=self.debug,
 	                                                          behavioural_file=self.behav_file)
-	                                                          # fixation_circle=fixation_circle)
-	                                                          # target_circle=target_circles[key],
-	                                                          # distractor_circle=dist_circles[key],
-	                                                          # target_circle_big=target_big_circles[key],
-	                                                          # distractor_circle_big=dist_big_circles[key])
 	                        
 	                        if practice_trial_num == self.settings["study"][self.exp_str]["practice_trials"] - 1:
 	                            practice_trial.phases["end_of_block"] = 1000
@@ -488,10 +456,9 @@ define inline_script singleton_session
 	                        trial_i += 1
 	                            
 	
-	        # if not self.debug:
-	        # TODO Check how to construct practice trials
 	
 	        self.trials = sorted(self.trials, key=lambda trial: trial.trial_nr)
+	        
 	        self.practice_trials = sorted(self.practice_trials, key=lambda trial: trial.trial_nr)
 	        self.practice_trials = self.practice_trials[:self.settings["study"][self.exp_str]["practice_trials"]]
 	
@@ -499,25 +466,25 @@ define inline_script singleton_session
 	        # for trial in self.trials:
 	        #     print(trial.trial_nr, trial.block_num, "end_of_block" in trial.phases.keys(), trial.SOA)
 	
-	        print("PRACTICE TRIALS")
-	        for trial in self.practice_trials:
-	            print(trial.trial_nr, trial.block_num, "end_of_block" in trial.phases.keys(), trial.SOA, trial.bg_orientation)
-	
-	
-	
-	        # for i in range(len(self.practice_trials[0].phase_durations)):
-	        #     print(self.practice_trials[0].phase_names[i], self.practice_trials[0].phase_durations[i])
-	
-	            # TODO: Change what makes it a practice: longer time somewhere?
-	            # practice_trial.phase_duration
-	
-	        # self.results = np.matrix(np.zeros([len(self.trials), 12]), dtype=object)
+	        # print("PRACTICE TRIALS")
+	        # for trial in self.practice_trials:
+	        #     print(trial.trial_nr, trial.block_num, "end_of_block" in trial.phases.keys(), trial.SOA, trial.bg_orientation)
 	__end__
 	set _prepare ""
 
 define inline_script singleton_trial
 	set description "Executes Python code"
 	___run__
+	"""
+	This file defines a Trial object
+	
+	The Trial object contains information about how the trial should run and what should be presented.
+	It is initialised with a dictionary of phases each with a specified time.
+	
+	The phases (which are defined functions) are executed in the run() method
+	
+	"""
+	
 	import numpy as np
 	
 	# import pylink
@@ -531,17 +498,6 @@ define inline_script singleton_trial
 	from psychopy import sound
 	from openexp.synth import synth
 	my_synth = synth(self.experiment, osc = "sine", freq = 500, attack = 0, length = 100)
-	# this is for dummy mode, comment if you are actually testing! 
-	my_mouse = mouse()
-	my_mouse.show_cursor(show = True)
-	
-	# import utils
-	
-	
-	# Opening edf files:
-	# open powershell in the folder
-	# command: edf2asc <filename> -e(events)/s(samples)
-	
 	
 	class SingletonTrial():
 	    def __init__(self,
@@ -551,14 +507,8 @@ define inline_script singleton_trial
 	                 parameters: Dict,
 	                 stimulus1: ElementArrayStim,
 	                 stimulus2: ElementArrayStim,
-	                 tone: sound.Sound,
 	                 behavioural_file: str,
 	                 debug: bool):
-	                 # fixation_circle: Circle,
-	                 # target_circle: Circle,
-	                 # distractor_circle: Circle,
-	                 # target_circle_big: Circle,
-	                 # distractor_circle_big: Circle):
 	
 	
 	        self.RT = None
@@ -575,16 +525,6 @@ define inline_script singleton_trial
 	        self.target_orientation = parameters["target_orientation"]
 	        self.distractor_orientation = parameters["distractor_orientation"]
 	        
-	        # self.target_circle = target_circle
-	        # self.target_circle_big = target_circle_big
-	        # self.distractor_circle = distractor_circle
-	        # self.distractor_circle_big = distractor_circle_big
-	        # self.fixation_circle = fixation_circle
-	
-	        # Delete tuples from parameters since they cannot be logged
-	        # del parameters["target_pos"]
-	        # del parameters["distractor_pos"]
-	
 	
 	        self.stimulus1 = stimulus1
 	        self.stimulus2 = stimulus2
@@ -594,21 +534,73 @@ define inline_script singleton_trial
 	
 	        self.parameters = dict(parameters)
 	
-	        self.a_sound = tone
-	
 	        self.behavioural_file = behavioural_file
 	        self.debug = debug
 	        self.phases = dict(phases)
+	        
+	        
+	    def run(self, RTs, correct):
+	        self.RTs = RTs
+	        # print("RTs", self.RTs)
+	        # print("CORRECT", correct)
+	        # print("BLOCK_INFO", self.block_num, self.parameters["num_blocks"])
+	        self.correct = correct
+	        
+	        # print("practice", self.parameters["practice"])
+	        
+	        # Initialize the trial 
+	        self.initialization()
+	        
+	        # Check if still fixating. If not, restart the trial
+	        for ms in clock.loop_for(self.phases["initialization"]):
+	            if not self.fix_check():
+	                self.ITI()
+	                clock.sleep(self.phases["ITI"])
+	                return self.run(self.RTs, self.correct)
+	        
+	        # Draw stimulus 1, could be targets are background depending on SOA
+	        self.draw_stim1()
+	        
+	    
+	        # If the targets are being displayed second, we still need to check fixation is being maintained
+	        for ms in clock.loop_for(self.phases["stimulus1"]):
+	            if self.parameters["stimulus2_log"] == "target_display":
+	                if not self.fix_check():
+	                    self.ITI()
+	                    clock.sleep(self.phases["ITI"])
+	                    return self.run(self.RTs, self.correct)
+	        
+	        
+	       
+	        # Draw stimulus 2, may be singletons or background depending on SOA
+	        self.draw_stim2()
+	        
+	        
+	        clock.sleep(self.parameters["ITI_wait"])  # Wait before removing grid, otherwise too fast
 	
-	        # self.singletons = singletons
-	        # self.target_stim = target_stim
-	        # self.distractor_stim = distractor_stim
+	        # Run ITI phase        
+	        self.ITI()
+	        clock.sleep(self.phases["ITI"])
+	
+	        # If last trial in block, run end of block phases
+	        if "end_of_block" in self.phases.keys():
+	            self.end_of_block()
+	            return True, self.RTs, self.correct
+	            # for ms in clock.loop_for(self.phases["end_of_block"]):
+	            key = event.waitKeys(keyList = ['space', 'q', 'esc'])
+	            if len(key)> 0: 
+	                return True, self.RTs, self.correct
+	                    
+	        return False, self.RTs, self.correct
+	        
+	
 	
 	    def initialization(self):
 	        
 	        if self.parameters["practice"] and self.trial_nr == self.parameters["practice_trials"]:
 	            self.end_of_practise()
 	            
+	        # Perform Drift Correction
 	        eyetracker.stop_recording()
 	            
 	        driftCheck = False 
@@ -618,19 +610,13 @@ define inline_script singleton_trial
 	        
 	        eyetracker.start_recording()
 	
-	            # self.session.tracker.sendMessage(
-	            #     f"trial {str(self.trial_nr)}_{str(round(np.nanmean(self.session.RTs) * 1000))}_{str(np.round(np.nanmean(self.to_target_list) * 100))}")
-	
-	            # self.session.win.flip()
 	        eyetracker.log("fix_display")  # Logging to EDF
 	        
-	        print("SOA", self.SOA)
-	        print("S1 DUR", self.phases["stimulus1"])
+	        # print("SOA", self.SOA)
+	        # print("S1 DUR", self.phases["stimulus1"])
 	
-	        # logging vars to edf file
-	        # TODO: to ensure logging works - CHECK everything is being logged. Maybe can make one long string with returns
-	        # TODO: in it. Check with Elle if this would still work for Analysis
-	        # Maybe check docs to see how many log calls can be made sequentially
+	        # logging vars to edf file 
+	        # TODO: Check everything is logged. Might need to split up further
 	        initialization_log_string = f"start_trial" \
 	                                    f"\nTRIAL_VAR trial_nr {self.trial_nr}" \
 	                                    f"\nTRIAL_VAR target_pos {self.target_pos}" \
@@ -651,67 +637,67 @@ define inline_script singleton_trial
 	
 	        eyetracker.log(initialization_log_string)
 	
-	        # print("End initialization")
-	        # self.session.fixation.draw()
+	
 	        self.draw_fixation((0,0),10)
 	        win.flip()
 	        
 	    def draw_stim1(self):
 	        self.stimulus1.draw()
-	            # print("Draw stim1")
 	        
 	        self.t0 = core.getTime() 
-	        win.flip()# TODO: Check if t0 needs to be accurate (target displayed rather than either)
+	        win.flip()
 	        eyetracker.log(self.parameters["stimulus1_log"])
 	
 	    
 	    def draw_stim2(self):
 	        self.stimulus1.draw()
 	        self.stimulus2.draw()
-	        # visual.Circle(win, radius=self.parameters["max_dist"], pos=self.target_pos, lineColor='green', units='deg').draw()
-	        # visual.Circle(win, radius=self.parameters["max_dist"], pos=self.distractor_pos, lineColor='green', units='deg').draw()
-	        # visual.Circle(win, radius=self.parameters["max_dist"], pos=(0,0), lineColor='green', units='deg').draw()
-	        
 	        win.flip()
 	        
 	        eyetracker.log(self.parameters["stimulus2_log"])
 	        
 	        response = 'fixate'
 	        
-	        
+	        # After stimulus 2 is drawn, we want a response 
+	        # So first check for an eye movement but timeout after the set amount of time so the trial doesn't hang
+	        # forever waiting for participant to make saccade (Timeout will only work with actual eyetracker)
 	        for ms in clock.loop_for(self.phases["stimulus2"]):
 	            try:
 	                self.endtime, self.startpos, self.endpos = wait_for_saccade_end_timeout(self.phases["stimulus2"])
 	            except AttributeError:
 	                self.endtime, self.startpos, self.endpos = eyetracker.wait_for_saccade_end()
+	           
 	            if self.startpos is None: # Didn't leave fixation
 	                return False
+	            
+	            # response_check checks where eyes move
+	            # If still within fixation circle, returns fixate
+	            # If the eyes move towards a location not holding either singleton, 
+	            # a sound is played and warning message displayed.
+	            # If it is a practice and the incorrect line is looked at, it also gives a warning message
 	            response, RT, self.success = self.response_check()
+	
+	            # Continue until an actual eye movement outside of the fixation AREA
 	            if response != 'fixate':
 	                break
 	        
-	        if response is not None and response != 'fixate':
-	            # print("RESPONSE CAPTURED", response)
-	            if response == 'distractor':
-	                return False
-	            
+	        if response == 'target': 
 	            self.RTs.append(RT)
+	            return True
 	        else:
 	            return False
 	
-	        
-	        return True
 	                    
 	    def ITI(self):
 	        self.draw_fixation((0,0),10)
 	        win.flip()
-	        # self.success = self.check_saccade(self.endpos)
+	
 	        eyetracker.log('TRIAL_VAR end_position ' + str(self.endpos))
 	        eyetracker.log('TRIAL_VAR succes ' + str(self.success))
 	
 	        eyetracker.log('stop_trial')
-	        # self.session.tracker.stop_recording()
-	        print("TRIAL_NUM", self.trial_nr)
+	
+	        # print("TRIAL_NUM", self.trial_nr)
 	        results.append([self.parameters["subject_number"],
 	                                                  self.trial_nr,
 	                                                  self.parameters["target_orientation"],
@@ -730,17 +716,14 @@ define inline_script singleton_trial
 	    def end_of_block(self):
 	        # print("RT LEN", len(RTs))
 	        avg_RT = np.round(np.nanmean(self.RTs) * 1000)
-	        # accuracy = np.round(np.nanmean(self.correct) * 100)
 	        
 	        this_instruction_string = (f"This was block {self.block_num}"
-	                               # f"\n\n Your accuracy was {accuracy}%"
 	                               f"\n Your average response time was {avg_RT} ms."
 	                               f"\n Well done! "
 	                               f"\n\nPlease press the -spacebar- to begin.")
 	        
 	        if self.parameters["practice"]:
 	                    this_instruction_string = (f"That concludes the practice round"
-	                               # f"\n\n Your accuracy was {accuracy}%"
 	                               f"\n\n Your average response time was {avg_RT} ms."
 	                               f"\n Well done! "
 	                               f"\n\nYou will now start with the actual experiment."
@@ -749,120 +732,15 @@ define inline_script singleton_trial
 	                    
 	        if self.block_num == self.parameters["num_blocks"]:
 	            this_instruction_string = (f"This was the last block!"
-	                               # f"\n\n Your accuracy was {accuracy}%"
 	                               f"\n Your average response time was {avg_RT} ms."
 	                               f"\n Well done! "
 	                               f"\n\nPlease press the -spacebar- to end the experiment.")
 	            
 	
-	
 	        draw_instructions(win, this_instruction_string, keys='space')
 	
-	        # RTs = []
 	        self.save_results()
-	        
-	        
-	
-	    
-	
-	    
-	    def run(self, RTs, correct):
-	        
-	
-	        self.RTs = RTs
-	        print("RTs", self.RTs)
-	        print("CORRECT", correct)
-	        print("BLOCK_INFO", self.block_num, self.parameters["num_blocks"])
-	        self.correct = correct
-	        
-	        print("practice", self.parameters["practice"])
-	        
-	        
-	        self.initialization()
-	        
-	        # core.wait(self.phases["initialization"])
-	        for ms in clock.loop_for(self.phases["initialization"]):
-	            if not self.fix_check():
-	                self.ITI()
-	                clock.sleep(self.phases["ITI"])
-	                return False, self.RTs, self.correct
-	        
-	        
-	        self.draw_stim1()
-	        
-	        # print("STIM 1 DRAWN")
-	        
-	        
-	        for ms in clock.loop_for(self.phases["stimulus1"]):
-	            # print("MS", ms)
-	            if self.parameters["stimulus2_log"] == "target_display":
-	                if not self.fix_check():
-	                    self.ITI()
-	                    clock.sleep(self.phases["ITI"])
-	                    return False, self.RTs, self.correct
-	        
-	        
-	       
-	        
-	        self.draw_stim2()
-	        
-	        clock.sleep(self.parameters["ITI_wait"])  # Wait before removing grid, otherwise too fast
-	        self.ITI()
-	        
-	        clock.sleep(self.phases["ITI"])
-	        
-	        # print("STIM 2 DRAWN")
-	        
-	        # clock.sleep(self.phases["stimulus2"])
-	        
-	
-	    
-	        
-	        #         key = event.getKeys(keyList = ['space'])
-	        # if len(key)> 0: 
-	        #     if key[0] =='space': 
-	        #         return
-	        
-	        if "end_of_block" in self.phases.keys():
-	            self.end_of_block()
-	            return True, self.RTs, self.correct
-	            # for ms in clock.loop_for(self.phases["end_of_block"]):
-	            key = event.waitKeys(keyList = ['space', 'q', 'esc'])
-	            if len(key)> 0: 
-	                return True, self.RTs, self.correct
-	                    
-	        return False, self.RTs, self.correct
-	        
-	        # print(self.phase)
-	        # for i in range(len(self.phase_names)):
-	        #     print(self.phase_names[i], self.phase_durations[i])
-	        # print('phase', self.phase_names[int(self.phase)])
-	        # print(self.parameters)
-	        # TODO: CHECK + What happens at block end??
-	        # check to see if it's time for a break
-	
-	
-	
-	            # self.session.tracker deals with everything here
-	            
-	
-	
-	            # session.tracker.sendMessage("TRIAL_VAR target_salience %s" % target_salience)
-	            # exp.sleep(2)
-	
-	
-	
-	    
-	
-	        # print("Draw fixaxtion")
-	        # utils.draw_instructions(self.session.win, "TEST", keys='space')
-	        
-	        # print(self.parameters)
-	
-	        # saving the results matrix
-	        # print(blue)
-	
-	        
+	   
 	
 	    def response_check(self):
 	        warning_text = visual.TextStim(win, text = 'Wrong line!')
@@ -872,12 +750,12 @@ define inline_script singleton_trial
 	        
 	        if distance(cur_pos, self.target_pos, True, win) < self.parameters["singleton_area"]:
 	            response = 'target'
-	            print("TARGET POS", self.target_pos)
+	            # print("TARGET POS", self.target_pos)
 	            self.correct.append(1)
 	            success = True
 	        elif distance(cur_pos, self.distractor_pos, True, win) < self.parameters["singleton_area"]:
 	            response = 'distractor'
-	            print("DIST POS", self.distractor_pos)
+	            # print("DIST POS", self.distractor_pos)
 	            self.correct.append(0)
 	            success = True
 	            # print("DIST COORD", self.distractor_pos)
@@ -901,11 +779,9 @@ define inline_script singleton_trial
 	           core.wait(1)
 	           response = None
 	        else:
-	            print("FIXATION")
+	            # print("FIXATION")
 	            response = 'fixation'
 	            success = None
-	        
-	        
 	            
 	        return response, RT, success
 	    
@@ -914,20 +790,14 @@ define inline_script singleton_trial
 	        cur_pos = get_curr_sample(self.parameters["window_size"])
 	        # print("FIX_CHECK_DIST", distance(cur_pos, (0,0), True, win))
 	        if distance(cur_pos, (0,0), True, win) > self.parameters["max_dist"]:
-	            print("NOT AT FIX")
+	            # print("NOT AT FIX")
 	            eyetracker.log("incorrect_starting_pos")
 	            core.wait(0.25)
-	            # self.fixation_circle.draw()
 	            warning_text.draw()
 	            win.flip()
 	            core.wait(1)
 	            return False
 	        return True
-	        
-	        # print("FIX CHECK CUR POS", cur_pos)
-	        # print("FIX CIRCLE", self.fixation_circle.pos)
-	     
-	
 	        
 	
 	    def draw_fixation(self, pos, lineSize, draw_cross=True, color='white'):
@@ -944,86 +814,16 @@ define inline_script singleton_trial
 	    def save_results(self):
 	        with open(self.behavioural_file, 'wb') as handle:
 	            pickle.dump(results, handle, protocol=pickle.HIGHEST_PROTOCOL)
-	
-	
-	
-	    def check_saccade(self, endpos):
-	        """
-	        Check whether movement is one continuous saccade, not broken up
-	        Parameters
-	        ----------
-	        endpos
-	
-	        Returns
-	        -------
-	
-	        """
-	        if endpos is None:
-	            return False
-	        
-	        cur_pos = get_curr_sample(self.parameters["window_size"])
-	
-	        # TODO: Use distance instead of circle
-	        if distance(cur_pos, self.target_pos, True, win) < 2 * self.parameters["max_dist"] or \
-	            distance(cur_pos, self.distractor_pos, True, win) < 2: 
-	            success = True
-	        else:
-	            success = False
-	            warning_text = visual.TextStim(win, text='Make one eye movement to the target!')
-	            warning_text.draw()
-	            win.flip()
-	            
-	        return success
-	
-	    # def get_events(self):
-	    #     """ Logs responses/triggers """
-	    #     for ev, t in event.getKeys(
-	    #             timeStamped=clock):  # list of of (keyname, time) relative to Clock’s last reset
-	    #         if len(ev) > 0:
-	    #             if ev in ['q']:
-	    #                 print('trial canceled by user')
-	    #                 close()
-	    #                 quit()
-	
-	    #             elif ev in['space'] and self.phase_names[int(self.phase)] == "end_of_block":
-	    #                 self.stop_phase()
-	
-	#
-	# class PracticeSingletonTrial(SingletonTrial):
-	#     def __init__(self,
-	#                  session: Session,
-	#                  trial_nr: int,
-	#                  phase_durations: Tuple[int],
-	#                  phase_names: Optional[Tuple[str]],
-	#                  parameters: Optional[Dict]):
-	#         super().__init__(session, trial_nr, phase_durations, phase_names, parameters)
-	#
-	#         """
-	#         if trial_nr == session.settings.nr_practice_trials:
-	#             end_of_practice()
-	#         """
-	#
-	#         def end_of_practise():
-	#             text1 = visual.TextStim(self.session.win, text='This is the end of the practise block', pos=(0, 200))
-	#             text2 = visual.TextStim(self.session.win,
-	#                                     text='From now on you will only hear a beep if you select the distractor (no longer the text Wrong Line!)',
-	#                                     pos=(0, -0))
-	#             text3 = visual.TextStim(self.session.win, text='Press c to continue', pos=(0, -200))
-	#
-	#             text1.draw()
-	#             text2.draw()
-	#             text3.draw()
-	#             self.session.win.flip()
-	#
-	#             event.waitKeys(keyList=['c'])
-	#             # core.wait(0.5)
 	__end__
 	set _prepare ""
 
 define inline_script utils
 	set description "Executes Python code"
-	set _run ""
-	___prepare__
+	___run__
+	"""
+	Some Utility Functions
+	"""
+	
 	import numpy as np
 	import os, sys
 	import os.path as op
@@ -1031,7 +831,6 @@ define inline_script utils
 	import random
 	import pandas as pd
 	import yaml
-	import pylink
 	
 	from psychopy import visual, tools, colors, event
 	import psychopy.tools.colorspacetools as ct
@@ -1042,9 +841,18 @@ define inline_script utils
 	import time
 	import colorsys
 	
+	if TRACKER_ON:
+	    import pylink
+	else:
+	    mouse().show_cursor(show = True)
+	    
+	
+	
 	
 	def wait_for_saccade_end_timeout(timeout=None):
 	    """endtime, startpos, endpos"""
+	    if not TRACKER_ON:  # Will call without timeout
+	        raise AttributeError 
 	    t0 = clock.time()
 	    tc = timeout
 	    for ms in clock.loop_for(timeout):
@@ -1297,4 +1105,5 @@ define inline_script utils
 	    else:
 	        return dist
 	__end__
+	set _prepare ""
 
