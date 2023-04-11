@@ -1,7 +1,7 @@
 ---
 API: 2.1
 OpenSesame: 3.3.14
-Platform: nt
+Platform: posix
 ---
 set width 1920
 set uniform_coordinates yes
@@ -27,7 +27,7 @@ set font_size 18
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "C:/Users/RA-Eyelink/Salience_Priority"
+set experiment_path "/Users/zach/RA_2023/Salience_Priority/experiment"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -617,26 +617,41 @@ define inline_script singleton_trial
 	
 	        # logging vars to edf file 
 	        # TODO: Check everything is logged. Might need to split up further
-	        initialization_log_string = f"start_trial" \
-	                                    f"\nTRIAL_VAR trial_nr {self.trial_nr}" \
-	                                    f"\nTRIAL_VAR target_pos {self.target_pos}" \
-	                                    f"\nTRIAL_VAR dist_pos {self.distractor_pos}" \
-	                                    f"\nTRIAL_VAR target_co_x {self.target_pos[0]}" \
-	                                    f"\nTRIAL_VAR target_co_y {self.target_pos[1]}"
-	       
-	        eyetracker.log(initialization_log_string)
-	       
+	        eyetracker.log("start_trial")
 	        exp.sleep(2)
 	        
-	        initialization_log_string = f"\nTRIAL_VAR distractor_co_x {self.distractor_pos[0]}" \
-	                                    f"\nTRIAL_VAR distractor_co_y {self.distractor_pos[1]}" \
-	                                    f"\nTRIAL_VAR background_orientation {self.bg_orientation}" \
-	                                    f"\nTRIAL_VAR ISI {self.SOA}" \
-	                                    f"\nTRIAL_VAR practice {self.parameters['practice']}" \
-	                                    f"\nTRIAL_VAR target_salience {self.parameters['target_salience']}"
+	        eyetracker.log("TRIAL_VAR trial_nr {self.trial_nr}")
+	        exp.sleep(2)
+	        
+	        eyetracker.log("TRIAL_VAR target_pos {self.target_pos}")
+	        exp.sleep(2)
+	        
+	        eyetracker.log("TRIAL_VAR dist_pos {self.distractor_pos}")
+	        exp.sleep(2)
+	        
+	        eyetracker.log("TRIAL_VAR target_co_x {self.target_pos[0]}")
+	        exp.sleep(2)  
+	        
+	        eyetracker.log("TRIAL_VAR target_co_x {self.target_pos[1]}")
+	        exp.sleep(2)
+	        
+	        eyetracker.log("TRIAL_VAR distractor_co_x {self.distractor_pos[0]}")
+	        exp.sleep(2)    
+	        
+	        eyetracker.log("TRIAL_VAR distractor_co_x {self.distractor_pos[1]}")
+	        exp.sleep(2)  
+	        
+	        eyetracker.log("TRIAL_VAR background_orientation {self.bg_orientation}")
+	        exp.sleep(2)  
+	        
+	        eyetracker.log("TRIAL_VAR ISI {self.SOA}")
+	        exp.sleep(2)  
+	        
+	        eyetracker.log("TRIAL_VAR practice {self.parameters['practice']}")
+	        exp.sleep(2)  
 	
-	        eyetracker.log(initialization_log_string)
-	
+	        eyetracker.log("TRIAL_VAR target_salience {self.parameters['target_salience']}")
+	        exp.sleep(2)  
 	
 	        self.draw_fixation((0,0),10)
 	        win.flip()
@@ -675,7 +690,7 @@ define inline_script singleton_trial
 	            # If the eyes move towards a location not holding either singleton, 
 	            # a sound is played and warning message displayed.
 	            # If it is a practice and the incorrect line is looked at, it also gives a warning message
-	            response, RT, self.success = self.response_check()
+	            response, self.RT, self.success = self.response_check()
 	
 	            # Continue until an actual eye movement outside of the fixation AREA
 	            if response != 'fixate':
