@@ -620,37 +620,37 @@ define inline_script singleton_trial
 	        eyetracker.log("start_trial")
 	        exp.sleep(2)
 	        
-	        eyetracker.log("TRIAL_VAR trial_nr {self.trial_nr}")
+	        eyetracker.log(f"TRIAL_VAR trial_nr {self.trial_nr}")
 	        exp.sleep(2)
 	        
-	        eyetracker.log("TRIAL_VAR target_pos {self.target_pos}")
+	        eyetracker.log(f"TRIAL_VAR target_pos {self.target_pos}")
 	        exp.sleep(2)
 	        
-	        eyetracker.log("TRIAL_VAR dist_pos {self.distractor_pos}")
+	        eyetracker.log(f"TRIAL_VAR dist_pos {self.distractor_pos}")
 	        exp.sleep(2)
 	        
-	        eyetracker.log("TRIAL_VAR target_co_x {self.target_pos[0]}")
+	        eyetracker.log(f"TRIAL_VAR target_co_x {self.target_pos[0]}")
 	        exp.sleep(2)  
 	        
-	        eyetracker.log("TRIAL_VAR target_co_x {self.target_pos[1]}")
+	        eyetracker.log(f"TRIAL_VAR target_co_x {self.target_pos[1]}")
 	        exp.sleep(2)
 	        
-	        eyetracker.log("TRIAL_VAR distractor_co_x {self.distractor_pos[0]}")
+	        eyetracker.log(f"TRIAL_VAR distractor_co_x {self.distractor_pos[0]}")
 	        exp.sleep(2)    
 	        
-	        eyetracker.log("TRIAL_VAR distractor_co_x {self.distractor_pos[1]}")
+	        eyetracker.log(f"TRIAL_VAR distractor_co_x {self.distractor_pos[1]}")
 	        exp.sleep(2)  
 	        
-	        eyetracker.log("TRIAL_VAR background_orientation {self.bg_orientation}")
+	        eyetracker.log(f"TRIAL_VAR background_orientation {self.bg_orientation}")
 	        exp.sleep(2)  
 	        
-	        eyetracker.log("TRIAL_VAR ISI {self.SOA}")
+	        eyetracker.log(f"TRIAL_VAR ISI {self.SOA}")
 	        exp.sleep(2)  
 	        
-	        eyetracker.log("TRIAL_VAR practice {self.parameters['practice']}")
+	        eyetracker.log(f"TRIAL_VAR practice {self.parameters['practice']}")
 	        exp.sleep(2)  
 	
-	        eyetracker.log("TRIAL_VAR target_salience {self.parameters['target_salience']}")
+	        eyetracker.log(f"TRIAL_VAR target_salience {self.parameters['target_salience']}")
 	        exp.sleep(2)  
 	
 	        self.draw_fixation((0,0),10)
