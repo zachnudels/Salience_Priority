@@ -692,15 +692,18 @@ define inline_script singleton_trial
 	            # If it is a practice and the incorrect line is looked at, it also gives a warning message
 	            response, self.RT, self.success = self.response_check()
 	
+	            
 	            # Continue until an actual eye movement outside of the fixation AREA
 	            if response != 'fixate':
 	                break
 	        
 	        if response == 'target': 
-	            self.RTs.append(RT)
+	            self.RTs.append(self.RT)
 	            return True
 	        else:
 	            return False
+	        
+	        
 	
 	                    
 	    def ITI(self):
