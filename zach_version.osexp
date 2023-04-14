@@ -556,7 +556,7 @@ define inline_script singleton_trial
 	            if not self.fix_check():
 	                self.ITI()
 	                clock.sleep(self.phases["ITI"])
-	                return self.run(self.RTs, self.correct)
+	                return False, self.RTs, self.correct
 	        
 	        # Draw stimulus 1, could be targets are background depending on SOA
 	        self.draw_stim1()
@@ -568,7 +568,7 @@ define inline_script singleton_trial
 	                if not self.fix_check():
 	                    self.ITI()
 	                    clock.sleep(self.phases["ITI"])
-	                    return self.run(self.RTs, self.correct)
+	                    return False, self.RTs, self.correct
 	        
 	        
 	       
