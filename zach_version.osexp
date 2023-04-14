@@ -1,7 +1,7 @@
 ---
 API: 2.1
-OpenSesame: 3.3.14
-Platform: posix
+OpenSesame: 3.3.11
+Platform: nt
 ---
 set width 1920
 set uniform_coordinates yes
@@ -27,7 +27,7 @@ set font_size 18
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "/Users/zach/RA_2023/Salience_Priority/experiment"
+set experiment_path "C:/Users/RA-Eyelink/Salience_Priority"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -35,7 +35,7 @@ set compensation 0
 set color_backend psycho
 set clock_backend psycho
 set canvas_backend psycho
-set background black
+set background "#2b2b2b"
 
 define inline_script constants
 	set description "Executes Python code"
@@ -132,7 +132,7 @@ define inline_script main
 	set _prepare ""
 
 define pygaze_init new_pygaze_init
-	set tracker_type EyeLink
+	set tracker_type "Advanced dummy (mouse simulation)"
 	set tobiiglasses_udpport 49152
 	set tobiiglasses_address "192.168.71.50"
 	set smi_send_port 4444
@@ -275,7 +275,7 @@ define inline_script singleton_session
 	
 	        # if self.eyetracker_on:
 	        #     eyetracker.start_recording()
-	
+	        print(len(self.trials))
 	        for trial in self.trials:
 	            end_of_block, RTs, correct = trial.run(RTs, correct)
 	            if end_of_block:
@@ -632,13 +632,13 @@ define inline_script singleton_trial
 	        eyetracker.log(f"TRIAL_VAR target_co_x {self.target_pos[0]}")
 	        exp.sleep(2)  
 	        
-	        eyetracker.log(f"TRIAL_VAR target_co_x {self.target_pos[1]}")
+	        eyetracker.log(f"TRIAL_VAR target_co_y {self.target_pos[1]}")
 	        exp.sleep(2)
 	        
 	        eyetracker.log(f"TRIAL_VAR distractor_co_x {self.distractor_pos[0]}")
 	        exp.sleep(2)    
 	        
-	        eyetracker.log(f"TRIAL_VAR distractor_co_x {self.distractor_pos[1]}")
+	        eyetracker.log(f"TRIAL_VAR distractor_co_y {self.distractor_pos[1]}")
 	        exp.sleep(2)  
 	        
 	        eyetracker.log(f"TRIAL_VAR background_orientation {self.bg_orientation}")

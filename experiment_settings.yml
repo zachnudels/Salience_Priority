@@ -6,27 +6,27 @@ preferences:
 study:
   no_exps: 2
   exp2:
-    SOAs: [-100, -30, -20, 0, 20, 30, 100]
+    SOAs: [-100, -30, 0, 30, 100]
     num_reps: 3
     num_blocks: 8
-    practice_trials: 10
+    practice_trials: 20
 
 stimuli:
   num_singletons: 2
   bg_orientation: [10, -10]
   singleton_orientation: [30, -30]
-  x_count: 15
-  y_count: 15
-  spacing: 0.9 # spacing betweeb elements
-  line_length: 0.9
-  line_width: 0.2
+  x_count: 21
+  y_count: 21
+  spacing: 0.7 # spacing between elements
+  line_length: 0.7
+  line_width: 0.1
   line_color: "#AAAAAA"
   fix_check_rad: 1.5  # How far away from fixation before trial restart
   singleton_area: 2.4  # How close to singleton before successful saccade counted
 
 trial_info:
   initialization_time: 200
-  ITI: 500
+  ITI: 800
   max_response_time: 2000
   ITI_wait: 100  # Keep items on screen so doesn't feel to rushed
   jitter: 100  # Random jitter between -<jitter>, +<jitter>
