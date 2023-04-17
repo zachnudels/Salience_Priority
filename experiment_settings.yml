@@ -6,7 +6,7 @@ preferences:
 study:
   no_exps: 2
   exp2:
-    SOAs: [-100, -30, 0, 30, 100]
+    SOAs: [-1000]
     num_reps: 3
     num_blocks: 8
     practice_trials: 20
@@ -23,6 +23,7 @@ stimuli:
   line_color: "#AAAAAA"
   fix_check_rad: 1.5  # How far away from fixation before trial restart
   singleton_area: 2.4  # How close to singleton before successful saccade counted
+  fixation_diameter: 1
 
 trial_info:
   initialization_time: 200
@@ -30,6 +31,7 @@ trial_info:
   max_response_time: 2000
   ITI_wait: 100  # Keep items on screen so doesn't feel to rushed
   jitter: 100  # Random jitter between -<jitter>, +<jitter>
+
 
 window: # refers to the parameters for the Psychopy Window class
   units: pix

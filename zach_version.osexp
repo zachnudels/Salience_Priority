@@ -1,7 +1,7 @@
 ---
 API: 2.1
-OpenSesame: 3.3.11
-Platform: nt
+OpenSesame: 3.3.14
+Platform: posix
 ---
 set width 1920
 set uniform_coordinates yes
@@ -27,7 +27,7 @@ set font_size 18
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "C:/Users/RA-Eyelink/Salience_Priority"
+set experiment_path "/Users/zach/RA_2023/Salience_Priority/experiment"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -48,13 +48,13 @@ define inline_script constants
 	
 	debug = False
 	exp_num = 2
-	cwd =  "C:\\Users\\RA-Eyelink\\Salience_Priority"
-	#cwd = '/Users/zach/RA_2023/Salience_Priority/experiment'
+	# cwd =  "C:\\Users\\RA-Eyelink\\Salience_Priority"
+	cwd = '/Users/zach/RA_2023/Salience_Priority/experiment'
 	results = []
 	to_target_list = []
 	RTs = []
 	
-	TRACKER_ON = True #type(eyetracker) != pygaze._eyetracker.libdummytracker.Dummy
+	TRACKER_ON = False #type(eyetracker) != pygaze._eyetracker.libdummytracker.Dummy
 	__end__
 	set _prepare ""
 
@@ -169,6 +169,7 @@ define inline_script singleton_session
 	from psychopy import visual
 	from psychopy import prefs
 	from psychopy import sound
+	from functools import partial
 	
 	from psychopy.tools.monitorunittools import deg2pix
 	
@@ -177,6 +178,10 @@ define inline_script singleton_session
 	
 	class SingletonSession():
 	    def __init__(self, output_str, output_dir, settings, behav_file, eyetracker_on, subject_number, exp_num, debug):
+	        
+	
+	
+	
 	        self.results = []
 	        self.practice_trials = []
 	        self.trials = []
@@ -222,6 +227,11 @@ define inline_script singleton_session
 	
 	        self.trial_parameters["max_dist"] = self.max_dist
 	        print("MAX_DIST", self.max_dist)
+	        
+	        self.trial_parameters["fixation_diameter"] = deg2pix(settings["stimuli"]["fixation_diameter"], win.monitor)
+	        
+	        eyetracker.set_draw_drift_correction_target_func(partial(draw_fixation, screen=win, color=pygaze.settings.FGC,     pw=1, diameter=self.trial_parameters["fixation_diameter"]))
+	        
 	
 	        ########################
 	
@@ -293,6 +303,8 @@ define inline_script singleton_session
 	        coordinates = grid_coordinates(self.settings["stimuli"]["x_count"],
 	                                       self.settings["stimuli"]["y_count"],
 	                                       pixel_spacing)
+	        
+	        print("PIXEL_SPACING", pixel_spacing)
 	
 	        # To save memory, we construct all the possible objects and then address them so we can access 
 	        # them when constructing our trial objects
@@ -602,6 +614,9 @@ define inline_script singleton_trial
 	            
 	        # Perform Drift Correction
 	        eyetracker.stop_recording()
+	        
+	        draw_fixation(0,0,win, diameter=self.parameters["fixation_diameter"])
+	        win.flip()
 	            
 	        driftCheck = False 
 	        while not driftCheck: 	
@@ -653,11 +668,16 @@ define inline_script singleton_trial
 	        eyetracker.log(f"TRIAL_VAR target_salience {self.parameters['target_salience']}")
 	        exp.sleep(2)  
 	
-	        self.draw_fixation((0,0),10)
-	        win.flip()
+	        # draw_fixation(0, 0, win)
+	        # win.flip()
 	        
 	    def draw_stim1(self):
 	        self.stimulus1.draw()
+	        # If we are displaying the targets after the grid, keep showing fixation until then
+	        if self.parameters["stimulus2_log"] == "target_display":
+	            draw_fixation(0,0,win, diameter=self.parameters["fixation_diameter"])
+	        #     eyetracker.draw_calibration_target(0,0)
+	            # win.flip()
 	        
 	        self.t0 = core.getTime() 
 	        win.flip()
@@ -707,7 +727,7 @@ define inline_script singleton_trial
 	
 	                    
 	    def ITI(self):
-	        self.draw_fixation((0,0),10)
+	        draw_fixation(0,0,win, diameter=self.parameters["fixation_diameter"])
 	        win.flip()
 	
 	        eyetracker.log('TRIAL_VAR end_position ' + str(self.endpos))
@@ -789,13 +809,15 @@ define inline_script singleton_trial
 	        elif distance(cur_pos, (0,0), True, win) > self.parameters["max_dist"]:
 	           clock.sleep(self.parameters["ITI_wait"])
 	           success = False
-	           my_synth.play()
-	           warning_text = visual.TextStim(win, text='Make one eye movement to the target!')
-	           # visual.Circle(win, radius=1.5 * self.parameters["max_dist"], pos=(0,0), lineColor='green', units='deg').draw()
-	           warning_text.draw()
-	           win.flip()
-	           core.wait(1)
 	           response = None
+	           
+	           if self.parameters["practice"]:
+	                my_synth.play()
+	                warning_text = visual.TextStim(win, text='Make one eye movement to the target!')
+	           # visual.Circle(win, radius=1.5 * self.parameters["max_dist"], pos=(0,0), lineColor='green', units='deg').draw()
+	                warning_text.draw()
+	                win.flip()
+	                core.wait(1)
 	        else:
 	            # print("FIXATION")
 	            response = 'fixation'
@@ -816,18 +838,6 @@ define inline_script singleton_trial
 	            core.wait(1)
 	            return False
 	        return True
-	        
-	
-	    def draw_fixation(self, pos, lineSize, draw_cross=True, color='white'):
-	        t = lineSize / 2.0
-	        vertical_line = visual.Line(win, start=(pos[0], pos[1] - t), end=(pos[0], pos[1] + t),
-	                                    lineColor=color)
-	        horizontal_line = visual.Line(win, start=(pos[0] - t, pos[1]), end=(pos[0] + t, pos[1]),
-	                                      lineColor=color)
-	
-	        if draw_cross:
-	            vertical_line.draw()
-	            horizontal_line.draw()
 	
 	    def save_results(self):
 	        with open(self.behavioural_file, 'wb') as handle:
@@ -855,6 +865,8 @@ define inline_script utils
 	from psychopy.tools.monitorunittools import deg2pix, pix2deg
 	import itertools
 	from typing import Optional
+	from pygaze import settings
+	
 	
 	import time
 	import colorsys
@@ -865,6 +877,13 @@ define inline_script utils
 	    mouse().show_cursor(show = True)
 	    
 	
+	def draw_fixation(x, y, screen, diameter, color=settings.FGC, pw=1):
+	    r = int(diameter/2.0)
+	    pos = (x,y)
+	    circle = Circle(screen, radius=r-pw, edges=32, \
+	                pos=pos, lineWidth=pw, lineColor=color, \
+	                lineColorSpace='rgb', fillColor=color, fillColorSpace='rgb')
+	    circle.draw()
 	
 	
 	def wait_for_saccade_end_timeout(timeout=None):
@@ -958,9 +977,13 @@ define inline_script utils
 	
 	    x_range = np.arange(-pixel_spacing * half_x, pixel_spacing * (1 + half_x), pixel_spacing, dtype=np.int32)
 	    y_range = np.arange(-pixel_spacing * half_y, pixel_spacing * (1 + half_y), pixel_spacing, dtype=np.int32)
-	    X, Y = np.meshgrid(x_range, y_range)
-	    return list(zip(X.ravel(), Y.ravel()))
 	
+	    X, Y = np.meshgrid(x_range, y_range)
+	    X = X.ravel()
+	    Y = Y.ravel()
+	    X = np.delete(X, [len(X)//2])
+	    Y = np.delete(Y, [len(Y)//2])
+	    return list(zip(X, Y))
 	
 	def construct_singleton_pairs(pixel_spacing: float, x_count, y_count):
 	    """
