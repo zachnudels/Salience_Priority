@@ -246,6 +246,9 @@ define inline_script singleton_session
 	        RTs = []
 	        correct = []
 	        self.create_trials()
+	        print(len(self.trials))
+	        
+	        print("NUM TRIALS", len(self.trials))
 	        
 	
 	        # draw instructions wait a few seconds
@@ -285,7 +288,9 @@ define inline_script singleton_session
 	
 	        # if self.eyetracker_on:
 	        #     eyetracker.start_recording()
-	        print(len(self.trials))
+	        
+	
+	    
 	        for trial in self.trials:
 	            end_of_block, RTs, correct = trial.run(RTs, correct)
 	            if end_of_block:
@@ -366,9 +371,6 @@ define inline_script singleton_session
 	            self.close()
 	
 	        trials_per_block = num_trials // self.num_blocks
-	        print("NUM TRIALS", num_trials)
-	        print("NUM BLOCKS", self.num_blocks)
-	        print("TRIALS PER BLOCK", trials_per_block)
 	        self.trial_parameters["num_blocks"] = self.num_blocks
 	
 	        trial_indices = np.arange(num_trials)
