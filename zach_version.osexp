@@ -572,18 +572,19 @@ define inline_script singleton_trial
 	                clock.sleep(self.phases["ITI"])
 	                return False, self.RTs, self.correct
 	        
-	        # Draw stimulus 1, could be targets are background depending on SOA
-	        self.draw_stim1()
+	        if self.SOA != 0:
+	            # Draw stimulus 1, could be targets are background depending on SOA
+	            self.draw_stim1()
+	            
 	        
-	    
-	        # If the targets are being displayed second, we still need to check fixation is being maintained
-	        for ms in clock.loop_for(self.phases["stimulus1"]):
-	            if self.parameters["stimulus2_log"] == "target_display":
-	                if not self.fix_check():
-	                    self.ITI()
-	                    clock.sleep(self.phases["ITI"])
-	                    return False, self.RTs, self.correct
-	        
+	            # If the targets are being displayed second, we still need to check fixation is being maintained
+	            for ms in clock.loop_for(self.phases["stimulus1"]):
+	                if self.parameters["stimulus2_log"] == "target_display":
+	                    if not self.fix_check():
+	                        self.ITI()
+	                        clock.sleep(self.phases["ITI"])
+	                        return False, self.RTs, self.correct
+	            
 	        
 	       
 	        # Draw stimulus 2, may be singletons or background depending on SOA
@@ -646,6 +647,18 @@ define inline_script singleton_trial
 	        eyetracker.log(f"TRIAL_VAR dist_pos {self.distractor_pos}")
 	        exp.sleep(2)
 	        
+	        eyetracker.log(f"TRIAL_VAR background_orientation {self.bg_orientation}")
+	        exp.sleep(2)  
+	        
+	        eyetracker.log(f"TRIAL_VAR target_salience {self.parameters['target_salience']}")
+	        exp.sleep(2)  
+	        
+	        eyetracker.log(f"TRIAL_VAR ISI {self.SOA}")
+	        exp.sleep(2)  
+	        
+	        eyetracker.log(f"TRIAL_VAR practice {self.parameters['practice']}")
+	        exp.sleep(2)  
+	        
 	        eyetracker.log(f"TRIAL_VAR target_co_x {self.target_pos[0]}")
 	        exp.sleep(2)  
 	        
@@ -658,22 +671,15 @@ define inline_script singleton_trial
 	        eyetracker.log(f"TRIAL_VAR distractor_co_y {self.distractor_pos[1]}")
 	        exp.sleep(2)  
 	        
-	        eyetracker.log(f"TRIAL_VAR background_orientation {self.bg_orientation}")
-	        exp.sleep(2)  
-	        
-	        eyetracker.log(f"TRIAL_VAR ISI {self.SOA}")
-	        exp.sleep(2)  
-	        
-	        eyetracker.log(f"TRIAL_VAR practice {self.parameters['practice']}")
-	        exp.sleep(2)  
 	
-	        eyetracker.log(f"TRIAL_VAR target_salience {self.parameters['target_salience']}")
-	        exp.sleep(2)  
+	
+	
 	
 	        # draw_fixation(0, 0, win)
 	        # win.flip()
 	        
 	    def draw_stim1(self):
+	        eyetracker.log("pre_display")
 	        self.stimulus1.draw()
 	        # If we are displaying the targets after the grid, keep showing fixation until then
 	        if self.parameters["stimulus2_log"] == "target_display":
@@ -690,6 +696,10 @@ define inline_script singleton_trial
 	        self.stimulus1.draw()
 	        self.stimulus2.draw()
 	        win.flip()
+	        
+	        if self.SOA == 0:
+	            self.t0 = core.getTime() 
+	            eyetracker.log(self.parameters["stimulus1_log"])
 	        
 	        eyetracker.log(self.parameters["stimulus2_log"])
 	        
@@ -724,13 +734,14 @@ define inline_script singleton_trial
 	            return True
 	        else:
 	            return False
-	        
+	
 	        
 	
 	                    
 	    def ITI(self):
 	        draw_fixation(0,0,win, diameter=self.parameters["fixation_diameter"])
 	        win.flip()
+	        eyetracker.log("fix_display2")
 	
 	        eyetracker.log('TRIAL_VAR end_position ' + str(self.endpos))
 	        eyetracker.log('TRIAL_VAR succes ' + str(self.success))
