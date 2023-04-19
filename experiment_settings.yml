@@ -61,8 +61,8 @@ window_extra: # refers to the parameters for the OLD Psychopy Window class (new 
   mac_bool: False #True #False
 
 paths:
-  curr_dir:  'local'
-  data_pth: {'lab': 'C:\Users\crowding_search_2\DATA\', 'srvr': '\\labssrv\crowding_search_2\DATA'}
+  curr_dir:  'lab'
+  data_pth: {'lab': 'C:\Users\RA-Eyelink\Salience_Priority\data'}
 
 eyetracker:
   address: '100.1.1.1' #  Eyelink eyetracker IP
