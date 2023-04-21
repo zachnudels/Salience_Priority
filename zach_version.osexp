@@ -1,7 +1,7 @@
 ---
 API: 2.1
 OpenSesame: 3.3.14
-Platform: nt
+Platform: posix
 ---
 set width 1920
 set uniform_coordinates yes
@@ -27,7 +27,7 @@ set font_size 18
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "C:/Users/RA-Eyelink/Salience_Priority"
+set experiment_path "/Users/zach/RA_2023/Salience_Priority/experiment"
 set disable_garbage_collection yes
 set description "The main experiment item"
 set coordinates uniform
@@ -48,8 +48,8 @@ define inline_script constants
 	
 	debug = False
 	exp_num = 2
-	cwd =  "C:\\Users\\RA-Eyelink\\Salience_Priority"
-	# cwd = '/Users/zach/RA_2023/Salience_Priority/experiment'
+	# cwd =  "C:\\Users\\RA-Eyelink\\Salience_Priority"
+	cwd = '/Users/zach/RA_2023/Salience_Priority/experiment'
 	results = []
 	to_target_list = []
 	RTs = []
@@ -66,6 +66,9 @@ define sequence experiment
 	run utils always
 	run singleton_session always
 	run singleton_trial always
+	run new_inline_script always
+	run new_form_text_input always
+	run new_form_text_input_1 always
 	run main always
 
 define inline_script main
@@ -75,7 +78,7 @@ define inline_script main
 	File to read in settings file, initialize Session and run it.
 	"""
 	
-	from psychopy import visual, core, event
+	from psychopy import visual, core, event, gui
 	from psychopy.tools.monitorunittools import deg2pix
 	import random
 	import numpy as np
@@ -88,6 +91,9 @@ define inline_script main
 	
 	
 	def main():
+	    
+	    log.write(f"age, {var.age}")
+	    log.write(f"gender, {var.gender}")
 	    with open(op.join(cwd, 'experiment_settings.yml'), 'r') as f_in:
 	        params = yaml.safe_load(f_in)
 	        
@@ -131,8 +137,55 @@ define inline_script main
 	__end__
 	set _prepare ""
 
+define form_text_input new_form_text_input
+	set timeout infinite
+	set spacing 10
+	set rows "1;1;6"
+	set only_render no
+	set margins "50;50;50;50"
+	set form_var age
+	set form_title Age
+	set form_question "Please enter your age"
+	set description "A simple text input form"
+	set cols 1
+	set _theme gray
+	widget 0 0 1 1 label text="[form_title]"
+	widget 0 1 1 1 label center=no text="[form_question]"
+	widget 0 2 1 1 text_input focus=yes return_accepts=yes stub="" var="[form_var]"
+
+
+define form_text_input new_form_text_input_1
+	set timeout infinite
+	set spacing 10
+	set rows "1;1;6"
+	set only_render no
+	set margins "50;50;50;50"
+	set form_var gender
+	set form_title Gender
+	set form_question "Please enter your gender (Male, Female, Other)"
+	set description "A simple text input form"
+	set cols 1
+	set _theme gray
+	widget 0 0 1 1 label text="[form_title]"
+	widget 0 1 1 1 label center=no text="[form_question]"
+	widget 0 2 1 1 text_input focus=yes return_accepts=yes stub="" var="[form_var]"
+
+
+define inline_script new_inline_script
+	set description "Executes Python code"
+	___run__
+	this_input_string = ("Welcome to the experiment and thanks for your participation."
+	                     "\nBefore we begin, we need to collect some data."
+	                     "\nUse the keyboard to answer the incoming questions."
+	                     "\n click --Enter-- once you are happy with your answer."
+	                     "\n\n Press the -spacebar- to continue.")
+	
+	draw_instructions(win, this_input_string, keys='space')
+	__end__
+	set _prepare ""
+
 define pygaze_init new_pygaze_init
-	set tracker_type EyeLink
+	set tracker_type "Advanced dummy (mouse simulation)"
 	set tobiiglasses_udpport 49152
 	set tobiiglasses_address "192.168.71.50"
 	set smi_send_port 4444
@@ -250,6 +303,7 @@ define inline_script singleton_session
 	        
 	        print("NUM TRIALS", len(self.trials))
 	        
+	
 	
 	        # draw instructions wait a few seconds
 	        this_instruction_string = (f"Instructions"
@@ -1092,6 +1146,57 @@ define inline_script utils
 	        pos_list = np.array(pos_list)
 	
 	    return pos_list, np.array(ecc_list)
+	    
+	# def draw_input(win, instructions, wait_keys=['b'], visual_obj=[], image_path=[],
+	#                       color=(1, 1, 1), font='Helvetica Neue', pos=(0, 0), height=30,  # .65,
+	#                       italic=True, anchorHoriz='center', anchorVert='center'):
+	#     """ draw instructions on screen
+	    
+	#     Parameters
+	#     ----------
+	#     win : object
+	#         window object to draw on
+	#     instructions : str
+	#         instruction string to draw 
+	#     key: list
+	#         list of keys to skip instructions
+	#     visual_obj: list
+	#         if not empty, should have psychopy visual objects (to add to the display ex: side rectangles to limit display)
+	        
+	#     """
+	
+	#     text = visual.TextStim(win=win,
+	#                            text=instructions,
+	#                            color=color,
+	#                            # font=font,
+	#                            pos=pos,
+	#                            height=height,
+	#                            italic=italic,
+	#                            anchorHoriz=anchorHoriz,
+	#                            anchorVert=anchorVert
+	#                            )
+	
+	#     # draw text 
+	#     text.draw()
+	
+	#     if len(visual_obj) > 0:
+	#         for w in range(len(visual_obj)):
+	#             visual_obj[w].draw()
+	
+	#     if len(image_path) > 0:
+	#         for _, img in enumerate(image_path):
+	#             img_stim = visual.ImageStim(win=win,
+	#                                         image=img,
+	#                                         pos=(0, 100))
+	#             img_stim.draw()
+	
+	#     win.flip()
+	
+	#     keys_pressed = event.getKeys(keyList=None)
+	#     # key_pressed = event.waitKeys(keyList=keys)
+	
+	#     return keys_pressed
+	
 	
 	
 	def draw_instructions(win, instructions, keys=['b'], visual_obj=[], image_path=[],
