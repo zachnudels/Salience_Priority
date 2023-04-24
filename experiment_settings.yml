@@ -47,6 +47,7 @@ monitor:
   width: 52.6 # width of monitor (in cm)
   distance: 73 # distance of participant from monitor (in cm)
   gamma: 1 # specific value for gamma correction
+  framerate: 60
 
 monitor_extra:
   height: 30 # height of monitor (in cm)

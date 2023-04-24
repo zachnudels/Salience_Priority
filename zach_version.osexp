@@ -435,6 +435,8 @@ define inline_script singleton_session
 	        # bear no relation with the actual trials since they are shuffled separately
 	        practice_trial_indices = np.arange(num_trials)
 	        np.random.shuffle(practice_trial_indices)
+	        
+	        half_frame = int((1000/3) / self.settings["monitor"]["framerate"])  # half frame in ms
 	
 	        for rep in range(self.num_reps):
 	            for target_coord, distractor_coord in possible_singleton_locations:
@@ -480,14 +482,17 @@ define inline_script singleton_session
 	                            stimulus2 = grid
 	                            _trial_parameters["stimulus2_log"] = "stimuli_show"
 	
+	                        # Construct phases but subtract half a frame since timing is always rounded up to nearest frame
+	                        # See https://osdoc.cogsci.nl/3.2/manual/timing/
 	                        jitter = self.settings["trial_info"]["jitter"]
 	                        phases = {
-	                            "initialization": initialization_time,
-	                            "stimulus1": np.abs(SOA),
-	                            "stimulus2": self.settings["trial_info"]["max_response_time"],
+	                            "initialization": initialization_time - half_frame,
+	                            "stimulus1": np.abs(SOA) - half_frame,
+	                            "stimulus2": self.settings["trial_info"]["max_response_time"] - half_frame,
 	                            "ITI": self.settings["trial_info"]["ITI"] \
 	                                    + np.random.uniform(-jitter, jitter) \
-	                                    - self.trial_parameters["ITI_wait"],
+	                                    - self.trial_parameters["ITI_wait"]
+	                                    - half_frame,
 	                        }
 	                        
 	                        trial = SingletonTrial(trial_nr=trial_num,
