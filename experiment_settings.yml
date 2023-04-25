@@ -45,9 +45,9 @@ window: # refers to the parameters for the Psychopy Window class
 monitor:
   name: default
   width: 52.6 # width of monitor (in cm)
-  distance: 73 # distance of participant from monitor (in cm)
+  distance: 75 # distance of participant from monitor (in cm)
   gamma: 1 # specific value for gamma correction
-  framerate: 60
+  framerate: 240
 
 monitor_extra:
   height: 30 # height of monitor (in cm)
