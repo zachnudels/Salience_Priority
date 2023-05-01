@@ -171,7 +171,7 @@ define form_text_input new_form_text_input_1
 
 
 define pygaze_init new_pygaze_init
-	set tracker_type "Advanced dummy (mouse simulation)"
+	set tracker_type EyeLink
 	set tobiiglasses_udpport 49152
 	set tobiiglasses_address "192.168.71.50"
 	set smi_send_port 4444
